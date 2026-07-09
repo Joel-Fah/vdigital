@@ -38,7 +38,7 @@ teal borders, soft teal-tinted shadows. **This project is a faithful rebuild of 
 identity on a modern, editable stack — not a redesign.** A returning visitor should
 notice only that it feels faster and more alive.
 
-The public site is one scrolling homepage (nine reorderable/hideable sections) plus two
+The public site is one scrolling homepage (ten reorderable/hideable sections) plus two
 full listing pages (`/projects`, `/services`) with progressive loading. Project, service
 and offer details open in a **right-side drawer**, not dedicated pages. Behind an
 obscured, authenticated path sits a dashboard with full CRUD over every content type,
@@ -85,7 +85,7 @@ and homepage section ordering.
 Browser
   │
   ├─ Public site (SSG/ISR, revalidate 1h)  ── reads ──▶ lib/content.ts ──▶ Prisma ──▶ Neon Postgres
-  │     • homepage (9 DB-driven sections)                     ▲
+  │     • homepage (10 DB-driven sections)                    ▲
   │     • /projects, /services (cursor pagination)            │ safe() fallbacks → empty states
   │     • right-side Drawer  ── fetch ──▶ /api/detail ────────┘
   │     • contact form  ── POST ──▶ /api/contact ─▶ Turnstile + rate-limit + email + store
