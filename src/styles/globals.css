@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Mirror the original CSS custom properties so raw CSS (gradients, borders)
+       can reference them exactly as the source HTML did (Section 2.1). */
+    --teal: #1b7a7a;
+    --teal-dark: #0d4f4f;
+    --teal-mid: #2a9d9d;
+    --teal-bright: #3bbfbf;
+    --teal-light: #e8f6f6;
+    --teal-ultra: #f0fafa;
+    --gold: #c9a84c;
+    --text: #1a2b2b;
+    --text-mid: #3d5555;
+    --text-muted: #7a9898;
+    --text-light: #a8bfbf;
+    --border: rgba(27, 122, 122, 0.12);
+    --border-soft: rgba(27, 122, 122, 0.07);
+    /* Sticky-header height — used for scroll-margin-top so anchored sections
+       don't hide behind the nav (Section 3.2). */
+    --header-h: 64px;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface-white font-sans text-ink antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Sections that are scroll targets clear the sticky header. */
+  section[id] {
+    scroll-margin-top: var(--header-h);
+  }
+
+  /* Respect user motion preferences (Section 2.3 / a11y). */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  ::selection {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+  }
+}
+
+@layer components {
+  /* Gradient hairline divider between sections (original `.divider`). */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--teal-light), transparent);
+  }
+
+  /* Frosted sticky nav (original `nav` backdrop-filter). */
+  .nav-frost {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Grid-line dividers built from a 1px background gap (Section 2.3) — the
+     original technique for services/KPI grids. Children sit on white; the gap
+     shows the teal border colour through. */
+  .grid-lines {
+    @apply bg-line;
+    gap: 1px;
+  }
+
+  /* Left-accent quote/highlight block (original `.bio-hl`, `.case-mission`). */
+  .accent-quote {
+    @apply border-l-2 border-teal bg-teal-ultra;
+  }
+
+  /* Skeleton shimmer for progressive-loading placeholders (Section 5.1). */
+  .skeleton {
+    @apply relative overflow-hidden bg-teal-ultra;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+}

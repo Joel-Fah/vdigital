@@ -1,0 +1,195 @@
+// VDIGITAL data model (Section 4).
+// Every user-facing content section is backed by a table here and editable from
+// the admin dashboard — nothing on the public site requires a code change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon: pooled URL for the app, direct URL for migrations. Falls back to
+  // DATABASE_URL when DIRECT_URL is unset (see .env.example).
+  directUrl = env("DIRECT_URL")
+}
+
+/// Homepage section ordering + visibility (Section 3.1). One row per section key.
+model Section {
+  id        String   @id @default(cuid())
+  key       String   @unique // "hero" | "about" | "services" | "projects" | ...
+  title     String
+  order     Int
+  visible   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Project {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  title        String
+  client       String?
+  category     String?
+  summary      String
+  resultsJson  Json? // array of { label, value, trend? }
+  link         String?
+  coverImageId String?
+  coverImage   MediaAsset?  @relation("ProjectCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  gallery      MediaAsset[] @relation("ProjectGallery")
+  tags         String[]     @default([])
+  featured     Boolean      @default(false) // shows in homepage teaser
+  order        Int
+  visible      Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([visible, order])
+  @@index([featured])
+}
+
+model Service {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       String
+  description String
+  iconId      String?
+  icon        MediaAsset? @relation("ServiceIcon", fields: [iconId], references: [id], onDelete: SetNull)
+  tags        String[]    @default([])
+  featured    Boolean     @default(false)
+  order       Int
+  visible     Boolean     @default(true)
+
+  @@index([visible, order])
+}
+
+model ClientLogo {
+  id      String      @id @default(cuid())
+  name    String
+  sector  String?
+  link    String?
+  logoId  String?
+  logo    MediaAsset? @relation("ClientLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  order   Int
+  visible Boolean     @default(true)
+
+  @@index([visible, order])
+}
+
+model ExpertiseItem {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  level       Int // 0-100, drives the skill-bar fill
+  order       Int
+  visible     Boolean @default(true)
+
+  @@index([visible, order])
+}
+
+model Offer {
+  id   String @id @default(cuid())
+  slug String @unique
+  /// Which tab this offer appears under: "diagnostic" | "formation".
+  /// Mirrors the original Diagnostics | Formations tabbed section.
+  kind String @default("diagnostic")
+
+  name        String
+  description String
+  /// Diagnostics: the "includes" checklist. Formations: the module list.
+  deliverables String[] @default([])
+  /// Diagnostics: corner badge ("Individuel"). Formations: level ("Débutant → Intermédiaire").
+  badge String?
+  /// Diagnostics: "⏱ 5–7 jours ouvrés". Formations: rendered as meta tags (comma-separated).
+  duration String?
+  /// Single emoji shown above the title, as in the original markup.
+  icon        String?
+  priceNote   String?
+  imageId     String?
+  image       MediaAsset? @relation("OfferImage", fields: [imageId], references: [id], onDelete: SetNull)
+  order       Int
+  visible     Boolean     @default(true)
+
+  @@index([visible, order])
+  @@index([kind, visible, order])
+}
+
+model Testimonial {
+  id      String      @id @default(cuid())
+  author  String
+  role    String?
+  company String?
+  quote   String
+  photoId String?
+  photo   MediaAsset? @relation("TestimonialPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  order   Int
+  visible Boolean     @default(true)
+
+  @@index([visible, order])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  ipHash    String? // hashed source IP for abuse tracing (not the raw IP)
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  url          String
+  altText      String? // required on upload via Zod (Section 7.6); nullable for Pexels imports
+  source       String   @default("upload") // "upload" | "pexels"
+  pexelsId     String? // if source = "pexels", for attribution/traceability
+  pexelsCredit String?
+  width        Int?
+  height       Int?
+  bytes        Int?
+  contentType  String?
+  uploadedAt   DateTime @default(now())
+
+  // Back-relations (Prisma requires the opposite side of each named relation).
+  projectCovers     Project[]     @relation("ProjectCover")
+  galleryProjects   Project[]     @relation("ProjectGallery")
+  serviceIcons      Service[]     @relation("ServiceIcon")
+  clientLogos       ClientLogo[]  @relation("ClientLogo")
+  offerImages       Offer[]       @relation("OfferImage")
+  testimonialPhotos Testimonial[] @relation("TestimonialPhoto")
+
+  @@index([source])
+  @@index([uploadedAt])
+}
+
+model SiteSettings {
+  id             String  @id @default("singleton")
+  seoTitle       String?
+  seoDescription String?
+  socialLinks    Json? // { instagram?, linkedin?, tiktok?, ... }
+  contactEmail   String?
+  contactPhone   String?
+  analyticsId    String?
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+/// Login audit + rate-limit source (Section 8.3).
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String // email or IP (hashed), whichever triggered it
+  success    Boolean
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+}
