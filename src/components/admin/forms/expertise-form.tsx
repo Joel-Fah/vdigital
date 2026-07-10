@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import type { ExpertiseItem } from '@prisma/client';
 import { Field, Input } from '@/components/ui/field';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
@@ -16,6 +16,8 @@ export function ExpertiseForm({
   item?: ExpertiseItem | null;
 }) {
   const [state, formAction] = useActionState<FormResult, FormData>(action, {});
+  const [level, setLevel] = useState(item?.level ?? 80);
+
   return (
     <form action={formAction} className="max-w-2xl space-y-5">
       <FormError>{state.error}</FormError>
@@ -25,17 +27,23 @@ export function ExpertiseForm({
       <Field label="Description (optionnelle)" htmlFor="description">
         <Input id="description" name="description" defaultValue={item?.description ?? ''} />
       </Field>
-      <Field label="Niveau (0–100)" htmlFor="level" required hint="Pilote la barre de progression.">
-        <Input
-          id="level"
-          name="level"
-          type="number"
-          min={0}
-          max={100}
-          defaultValue={item?.level ?? 80}
-          className="w-28"
-          required
-        />
+      <Field label="Niveau" htmlFor="level" required hint="Pilote la barre de progression.">
+        <div className="flex items-center gap-4">
+          <input
+            id="level"
+            name="level"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={level}
+            onChange={(e) => setLevel(Number(e.target.value))}
+            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-teal-light accent-[color:var(--teal)]"
+          />
+          <span className="w-12 text-right font-display text-[1.1rem] font-bold text-teal">
+            {level}%
+          </span>
+        </div>
       </Field>
       <Field label="Ordre" htmlFor="order">
         <Input

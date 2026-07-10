@@ -1,97 +1,173 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { HERO, LOGO_SRC } from '@/content/static-copy';
 import { Icon } from '@/components/ui/icon';
 
 /**
- * Hero — 1:1 rebuild of the original `.hero` + `.stats-bar`.
- * Circular logo frame with three floating badges; radial teal glow top-right;
- * gradient hairline along the bottom. Visual column hidden below 768px, as in
- * the original.
+ * Hero (v1.0 redesign) — a polaroid-framed portrait centre stage with the name
+ * and roles clearly upfront, the badges flanking it, and CTAs + description
+ * below. Behind everything sit soft teal gradient blobs that drift gently toward
+ * the cursor (parallax) over a faint dot grid. All motion respects
+ * prefers-reduced-motion.
+ *
+ * PEXELS-PLACEHOLDER: the polaroid uses the VDIGITAL logo as a stand-in for a
+ * real portrait of Vitus — swap `LOGO_SRC` for a headshot when available.
  */
 export function Hero() {
+  const layerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        // -1..1 relative to viewport centre.
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        if (layerRef.current) {
+          layerRef.current.style.transform = `translate3d(${x * 24}px, ${y * 24}px, 0)`;
+        }
+        if (frameRef.current) {
+          // The photo counter-parallaxes very slightly for depth + a soft tilt.
+          frameRef.current.style.transform = `translate3d(${x * -8}px, ${y * -8}px, 0) rotate(-2deg)`;
+        }
+      });
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <>
       <section
         id="hero"
-        className="relative grid min-h-[90vh] items-center gap-8 overflow-hidden px-6 py-12 md:grid-cols-[1.1fr_1fr] md:gap-16 md:px-20 md:py-20"
+        className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden px-6 py-16 md:px-12 lg:px-20"
       >
-        {/* .hero-bg-circle */}
+        {/* Interactive background: drifting teal blobs + dot grid */}
         <div
-          className="pointer-events-none absolute -right-[120px] -top-[120px] h-[700px] w-[700px] rounded-full"
-          style={{ background: 'radial-gradient(circle, var(--teal-ultra) 0%, transparent 70%)' }}
+          ref={layerRef}
+          className="pointer-events-none absolute inset-0 -z-10 will-change-transform"
           aria-hidden
-        />
-        {/* .hero-bg-line */}
+        >
+          <div
+            className="absolute left-[8%] top-[12%] h-[420px] w-[420px] rounded-full blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(59,191,191,0.28), transparent 70%)',
+            }}
+          />
+          <div
+            className="absolute right-[6%] top-[30%] h-[360px] w-[360px] rounded-full blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(201,168,76,0.18), transparent 70%)',
+            }}
+          />
+          <div
+            className="absolute bottom-[6%] left-1/2 h-[380px] w-[380px] -translate-x-1/2 rounded-full blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(27,122,122,0.20), transparent 70%)',
+            }}
+          />
+        </div>
         <div
-          className="pointer-events-none absolute bottom-0 left-0 h-[3px] w-full"
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.5]"
+          aria-hidden
           style={{
-            background: 'linear-gradient(90deg, transparent, var(--teal-light), transparent)',
+            backgroundImage: 'radial-gradient(rgba(27,122,122,0.14) 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+            maskImage: 'radial-gradient(ellipse 70% 60% at 50% 45%, #000 40%, transparent 100%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 70% 60% at 50% 45%, #000 40%, transparent 100%)',
           }}
-          aria-hidden
         />
 
-        <div className="relative z-[2]">
-          {/* .hero-tag */}
-          <div className="mb-[1.8rem] inline-flex items-center gap-2 rounded border border-teal/20 bg-teal-ultra px-4 py-1.5 text-[0.7rem] uppercase tracking-[2px] text-teal">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal-bright" aria-hidden />
-            {HERO.tag}
+        {/* Eyebrow */}
+        <div className="mb-6 inline-flex items-center gap-2 rounded border border-teal/20 bg-teal-ultra/80 px-4 py-1.5 text-[0.7rem] uppercase tracking-[2px] text-teal backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-teal-bright" aria-hidden />
+          {HERO.tag}
+        </div>
+
+        {/* Name + roles */}
+        <h1 className="text-center font-display text-hero-name font-bold leading-[1.05] text-ink">
+          {HERO.firstName} <em className="not-italic text-teal">{HERO.lastName}</em>
+        </h1>
+        <p className="mt-3 text-center text-[0.9rem] tracking-[0.5px] text-ink-muted">
+          {HERO.title}
+        </p>
+
+        {/* Photo flanked by badges */}
+        <div className="my-9 flex items-center justify-center gap-6 md:gap-12">
+          <div className="hidden flex-col items-end gap-4 md:flex">
+            <Badge icon={HERO.badges[0].icon} text={HERO.badges[0].text} />
+            <Badge icon={HERO.badges[1].icon} text={HERO.badges[1].text} />
           </div>
 
-          {/* .hero-name */}
-          <h1 className="mb-[0.4rem] font-display text-hero-name font-bold leading-[1.1] text-ink">
-            {HERO.firstName}
-            <br />
-            <em className="not-italic text-teal">{HERO.lastName}</em>
-          </h1>
+          {/* Polaroid */}
+          <div
+            ref={frameRef}
+            className="relative shrink-0 rounded-[3px] bg-white p-3 pb-10 shadow-card will-change-transform"
+            style={{ transform: 'rotate(-2deg)' }}
+          >
+            <div className="relative h-56 w-56 overflow-hidden bg-teal-ultra sm:h-64 sm:w-64">
+              <Image
+                src={LOGO_SRC}
+                alt="Vitus Ahanda"
+                fill
+                sizes="256px"
+                priority
+                className="object-cover"
+              />
+            </div>
+            <p className="absolute bottom-3 left-0 right-0 text-center font-display text-[0.95rem] font-bold text-ink">
+              Vitus Ahanda
+            </p>
+          </div>
 
-          {/* .hero-title */}
-          <p className="mb-6 border-b border-line pb-6 text-[0.95rem] tracking-[0.5px] text-ink-muted">
-            {HERO.title}
-          </p>
-
-          {/* .hero-desc */}
-          <p className="mb-10 max-w-[440px] text-[0.92rem] leading-[1.85] text-ink-mid">
-            {HERO.description}
-          </p>
-
-          {/* .hero-btns */}
-          <div className="flex flex-wrap gap-4">
-            <a
-              href="#contact"
-              className="inline-block rounded bg-teal px-7 py-[13px] text-[0.8rem] uppercase tracking-[1px] text-white transition-all duration-200 hover:-translate-y-px hover:bg-teal-dark"
-            >
-              {HERO.ctaPrimary}
-            </a>
-            <a
-              href="#projects"
-              className="inline-block rounded border-[1.5px] border-teal px-7 py-[13px] text-[0.8rem] uppercase tracking-[1px] text-teal transition-all duration-200 hover:bg-teal-ultra"
-            >
-              {HERO.ctaOutline}
-            </a>
+          <div className="hidden flex-col items-start gap-4 md:flex">
+            <Badge icon={HERO.badges[2].icon} text={HERO.badges[2].text} />
+            <div className="rounded-md border border-line bg-surface-white/90 px-4 py-3 text-center shadow-float backdrop-blur-sm">
+              <div className="font-display text-[1.6rem] font-bold text-teal">1,6M</div>
+              <div className="text-[0.6rem] uppercase tracking-wide text-ink-muted">
+                Vues générées
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* .hero-visual — hidden on mobile, exactly as the original */}
-        <div className="relative z-[2] hidden items-center justify-center md:flex">
-          <div className="relative flex h-[320px] w-[320px] items-center justify-center rounded-full border-[1.5px] border-line bg-teal-ultra">
-            <div className="flex h-[270px] w-[270px] items-center justify-center rounded-full bg-surface-white shadow-card">
-              <Image
-                src={LOGO_SRC}
-                alt="VDIGITAL"
-                width={190}
-                height={190}
-                className="h-[190px] w-[190px] rounded-full object-cover"
-                priority
-              />
-            </div>
-            <FloatingBadge className="right-[-10px] top-5" badge={HERO.badges[0]} />
-            <FloatingBadge className="bottom-10 left-[-30px]" badge={HERO.badges[1]} />
-            <FloatingBadge className="bottom-[100px] right-[-15px]" badge={HERO.badges[2]} />
-          </div>
+        {/* Badges row on mobile (flank layout is desktop-only) */}
+        <div className="mb-6 flex flex-wrap justify-center gap-3 md:hidden">
+          {HERO.badges.map((b) => (
+            <Badge key={b.text} icon={b.icon} text={b.text} />
+          ))}
+        </div>
+
+        {/* Description + CTAs */}
+        <p className="max-w-[520px] text-center text-[0.92rem] leading-[1.85] text-ink-mid">
+          {HERO.description}
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <a
+            href="#contact"
+            className="inline-block rounded bg-teal px-7 py-[13px] text-[0.8rem] uppercase tracking-[1px] text-white transition-all duration-200 hover:-translate-y-px hover:bg-teal-dark"
+          >
+            {HERO.ctaPrimary}
+          </a>
+          <a
+            href="#projects"
+            className="inline-block rounded border-[1.5px] border-teal bg-surface-white/70 px-7 py-[13px] text-[0.8rem] uppercase tracking-[1px] text-teal backdrop-blur-sm transition-all duration-200 hover:bg-teal-ultra"
+          >
+            {HERO.ctaOutline}
+          </a>
         </div>
       </section>
 
-      {/* .stats-bar — left-aligned cells, divided by 1px teal borders */}
+      {/* Stats bar */}
       <div className="grid grid-cols-2 border-y border-line bg-teal-ultra md:grid-cols-4">
         {HERO.stats.map((s, i) => (
           <div
@@ -112,19 +188,11 @@ export function Hero() {
   );
 }
 
-function FloatingBadge({
-  badge,
-  className,
-}: {
-  badge: { icon: 'trophy' | 'bar-chart' | 'sparkle'; text: string };
-  className?: string;
-}) {
+function Badge({ icon, text }: { icon: 'trophy' | 'bar-chart' | 'sparkle'; text: string }) {
   return (
-    <div
-      className={`absolute inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line bg-surface-white px-3.5 py-2 text-[0.72rem] text-teal shadow-float ${className}`}
-    >
-      <Icon name={badge.icon} className="h-3.5 w-3.5" />
-      {badge.text}
+    <div className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line bg-surface-white/90 px-3.5 py-2 text-[0.72rem] text-teal shadow-float backdrop-blur-sm">
+      <Icon name={icon} className="h-3.5 w-3.5" />
+      {text}
     </div>
   );
 }

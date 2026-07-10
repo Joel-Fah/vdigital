@@ -41,6 +41,17 @@ export async function reorderSectionAction(id: string, dir: 'up' | 'down'): Prom
   return { ok: true };
 }
 
+/** Persist a full drag-and-drop reorder: order = position in `orderedIds`. */
+export async function reorderSectionsAction(orderedIds: string[]): Promise<ActionResult> {
+  await requireAdmin();
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) return { ok: false };
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.section.update({ where: { id }, data: { order: index } })),
+  );
+  revalidate();
+  return { ok: true };
+}
+
 function revalidate() {
   revalidatePath('/');
   revalidatePath(adminPath('sections'));

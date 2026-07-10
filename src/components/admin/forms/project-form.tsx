@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import type { MediaAsset, Project } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
 import { ChipsInput } from '@/components/ui/chips-input';
+import { Combobox } from '@/components/ui/combobox';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/projects/actions';
@@ -15,11 +16,13 @@ export function ProjectForm({
   cancelHref,
   project,
   coverAsset,
+  categories = [],
 }: {
   action: (state: FormResult, formData: FormData) => Promise<FormResult>;
   cancelHref: string;
   project?: Project | null;
   coverAsset?: MediaAsset | null;
+  categories?: string[];
 }) {
   const [state, formAction] = useActionState<FormResult, FormData>(action, {});
   const results = (project?.resultsJson as Result[] | null) ?? [];
@@ -39,12 +42,27 @@ export function ProjectForm({
         <Field label="Client" htmlFor="client">
           <Input id="client" name="client" defaultValue={project?.client ?? ''} />
         </Field>
-        <Field label="Catégorie" htmlFor="category">
-          <Input id="category" name="category" defaultValue={project?.category ?? ''} />
+        <Field
+          label="Catégorie"
+          htmlFor="category"
+          hint="Choisissez une catégorie existante ou saisissez-en une nouvelle."
+        >
+          <Combobox
+            id="category"
+            name="category"
+            options={categories}
+            defaultValue={project?.category ?? ''}
+            placeholder="ex : Grande distribution"
+          />
         </Field>
       </div>
 
-      <Field label="Résumé / mission" htmlFor="summary" required>
+      <Field
+        label="Résumé / mission"
+        htmlFor="summary"
+        required
+        tooltip="Décrivez le contexte et la mission : le défi du client, votre rôle, l'approche. C'est le texte principal affiché dans le tiroir du projet."
+      >
         <Textarea id="summary" name="summary" defaultValue={project?.summary} required />
       </Field>
 

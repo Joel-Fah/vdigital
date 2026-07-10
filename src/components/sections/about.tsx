@@ -11,10 +11,11 @@ import { ABOUT, AWARD_MEDAL_SRC } from '@/content/static-copy';
  */
 export function About() {
   return (
-    <section id="about" className="bg-surface-white px-6 py-12 md:px-20 md:py-24">
+    <section id="about" className="bg-surface-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-24">
       <div className="grid items-start gap-16 md:grid-cols-[1fr_1.6fr]">
-        {/* .about-left — display:none on mobile in the original */}
-        <div className="hidden md:block">
+        {/* .about-left — hidden on mobile; sticks to the top while the taller
+            right column scrolls past (v1.0: left title has sticky behaviour). */}
+        <div className="hidden md:sticky md:top-24 md:block md:self-start">
           <div className="mb-8 flex flex-col items-center gap-5">
             <div className="relative flex h-[150px] w-[150px] items-center justify-center rounded-full border-2 border-teal/20 bg-gradient-to-br from-teal-light to-teal-ultra font-display text-[2.8rem] font-bold text-teal">
               {ABOUT.initials}

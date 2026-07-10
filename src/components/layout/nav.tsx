@@ -64,7 +64,7 @@ export function Nav({ sections }: { sections: SectionMap }) {
 
   return (
     <header className="nav-frost sticky top-0 z-[100] border-b border-line">
-      <nav className="flex items-center justify-between px-6 py-4 md:px-20">
+      <nav className="flex items-center justify-between px-6 py-4 md:px-12 lg:px-20">
         <Link href="/" className="flex items-center gap-2.5" aria-label="VDIGITAL — accueil">
           <Image
             src={LOGO_SRC}

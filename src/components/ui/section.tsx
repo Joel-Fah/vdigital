@@ -19,7 +19,11 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn('px-6 py-12 md:px-20 md:py-20', alt && 'bg-surface-off', className)}
+      className={cn(
+        'px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20',
+        alt && 'bg-surface-off',
+        className,
+      )}
     >
       {children}
     </section>
