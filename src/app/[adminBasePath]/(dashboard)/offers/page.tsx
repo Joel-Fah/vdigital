@@ -20,8 +20,8 @@ export default async function AdminOffersPage() {
         addHref={adminPath('offers/new')}
         rows={offers.map((o) => ({
           id: o.id,
-          primary: `${o.icon ? `${o.icon} ` : ''}${o.name}`,
-          secondary: [o.kind === 'formation' ? '🎓 Formation' : '🔍 Diagnostic', o.badge]
+          primary: o.name,
+          secondary: [o.kind === 'formation' ? 'Formation' : 'Diagnostic', o.badge]
             .filter(Boolean)
             .join(' · '),
           visible: o.visible,

@@ -11,12 +11,12 @@ import { LOGO_SRC, NAV_LINKS } from '@/content/static-copy';
 import type { SectionMap } from '@/lib/content';
 
 /**
- * Sticky frosted nav — a 1:1 rebuild of the original `<nav>`: logo + wordmark,
- * six uppercase anchors, and the "Me contacter" CTA. No extra links.
- * (/projects and /services are reached via the teaser "Voir tous…" CTAs.)
+ * Sticky frosted nav — 1:1 rebuild of the original `<nav>`: logo + wordmark,
+ * six uppercase anchors, "Me contacter" CTA.
  *
- * Dynamic behaviour retained: IntersectionObserver scrollspy on `/`, links
- * filtered by Section.visible, and a mobile hamburger menu.
+ * Dynamic: IntersectionObserver scrollspy on `/`, links filtered by
+ * Section.visible, and a full-screen mobile drawer whose tabs reveal top→bottom
+ * and which locks page scroll while open.
  */
 export function Nav({ sections }: { sections: SectionMap }) {
   const pathname = usePathname();
@@ -26,13 +26,13 @@ export function Nav({ sections }: { sections: SectionMap }) {
 
   const links = NAV_LINKS.filter((l) => sections[l.key]?.visible !== false);
 
+  // Scrollspy on the homepage.
   useEffect(() => {
     if (!isHome) return;
     const targets = links
       .map((l) => document.getElementById(l.key))
       .filter((el): el is HTMLElement => el !== null);
     if (!targets.length) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -47,11 +47,17 @@ export function Nav({ sections }: { sections: SectionMap }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHome, pathname]);
 
+  // Lock page scroll + close on Escape while the drawer is open.
   useEffect(() => {
     if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMobileOpen(false);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
   }, [mobileOpen]);
 
   const href = (key: string) => (isHome ? `#${key}` : `/#${key}`);
@@ -59,7 +65,6 @@ export function Nav({ sections }: { sections: SectionMap }) {
   return (
     <header className="nav-frost sticky top-0 z-[100] border-b border-line">
       <nav className="flex items-center justify-between px-6 py-4 md:px-20">
-        {/* .nav-logo */}
         <Link href="/" className="flex items-center gap-2.5" aria-label="VDIGITAL — accueil">
           <Image
             src={LOGO_SRC}
@@ -74,7 +79,6 @@ export function Nav({ sections }: { sections: SectionMap }) {
           </span>
         </Link>
 
-        {/* .nav-links */}
         <div className="hidden gap-10 md:flex">
           {links.map((l) => (
             <a
@@ -91,7 +95,6 @@ export function Nav({ sections }: { sections: SectionMap }) {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* .nav-cta */}
           <a
             href={href('contact')}
             className="hidden rounded bg-teal px-[22px] py-[9px] text-[0.75rem] uppercase tracking-[1px] text-white transition-colors duration-200 hover:bg-teal-dark sm:inline-block"
@@ -99,44 +102,68 @@ export function Nav({ sections }: { sections: SectionMap }) {
             Me contacter
           </a>
           <button
-            className="rounded p-1.5 text-ink transition-colors hover:text-teal md:hidden"
+            className="relative z-[130] rounded p-1.5 text-ink transition-colors hover:text-teal md:hidden"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </nav>
 
+      {/* Full-screen mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            className="nav-frost overflow-hidden border-t border-line md:hidden"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="fixed inset-0 z-[120] flex flex-col bg-surface-white md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="flex flex-col px-6 py-4">
-              {links.map((l) => (
-                <a
-                  key={l.key}
-                  href={href(l.key)}
-                  onClick={() => setMobileOpen(false)}
-                  className="py-2 text-[0.85rem] uppercase tracking-[1.2px] text-ink-muted hover:text-teal"
-                >
-                  {l.label}
-                </a>
-              ))}
-              <a
-                href={href('contact')}
-                onClick={() => setMobileOpen(false)}
-                className="mt-3 rounded bg-teal px-[22px] py-[9px] text-center text-[0.75rem] uppercase tracking-[1px] text-white"
-              >
-                Me contacter
-              </a>
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <span className="font-display text-[1.25rem] font-bold tracking-[1px] text-ink">
+                V<span className="text-teal">DIGITAL</span>
+              </span>
             </div>
+
+            <motion.ul
+              className="flex flex-1 flex-col justify-center gap-1 px-8"
+              initial="hidden"
+              animate="show"
+              variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } } }}
+            >
+              {links.map((l) => (
+                <motion.li
+                  key={l.key}
+                  variants={{
+                    hidden: { opacity: 0, y: 18 },
+                    show: { opacity: 1, y: 0 },
+                  }}
+                >
+                  <a
+                    href={href(l.key)}
+                    onClick={() => setMobileOpen(false)}
+                    className="block border-b border-line-soft py-4 font-display text-[1.6rem] font-bold text-ink transition-colors hover:text-teal"
+                  >
+                    {l.label}
+                  </a>
+                </motion.li>
+              ))}
+              <motion.li
+                variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
+                className="mt-6"
+              >
+                <a
+                  href={href('contact')}
+                  onClick={() => setMobileOpen(false)}
+                  className="inline-block rounded bg-teal px-7 py-3 text-[0.8rem] uppercase tracking-[1px] text-white"
+                >
+                  Me contacter
+                </a>
+              </motion.li>
+            </motion.ul>
           </motion.div>
         )}
       </AnimatePresence>

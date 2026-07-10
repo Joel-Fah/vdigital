@@ -1,22 +1,27 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { adminPath } from '@/lib/admin';
+import { withRetry } from '@/lib/db-retry';
 
 export const dynamic = 'force-dynamic';
 
 /** Admin overview — content counts + unread messages, each a quick link. */
 export default async function DashboardPage() {
+  // withRetry rides out Neon cold-starts so the dashboard doesn't error on the
+  // first request after the DB has been idle.
   const [projects, services, clients, expertise, offers, testimonials, unread, media] =
-    await Promise.all([
-      prisma.project.count(),
-      prisma.service.count(),
-      prisma.clientLogo.count(),
-      prisma.expertiseItem.count(),
-      prisma.offer.count(),
-      prisma.testimonial.count(),
-      prisma.contactMessage.count({ where: { read: false } }),
-      prisma.mediaAsset.count(),
-    ]);
+    await withRetry(() =>
+      Promise.all([
+        prisma.project.count(),
+        prisma.service.count(),
+        prisma.clientLogo.count(),
+        prisma.expertiseItem.count(),
+        prisma.offer.count(),
+        prisma.testimonial.count(),
+        prisma.contactMessage.count({ where: { read: false } }),
+        prisma.mediaAsset.count(),
+      ]),
+    );
 
   const cards = [
     { label: 'Projets', value: projects, sub: 'projects' },

@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import type { MediaAsset, Project } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { ChipsInput } from '@/components/ui/chips-input';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/projects/actions';
@@ -60,8 +61,8 @@ export function ProjectForm({
         />
       </Field>
 
-      <Field label="Tags (séparés par des virgules)" htmlFor="tags">
-        <Input id="tags" name="tags" defaultValue={project?.tags.join(', ')} />
+      <Field label="Tags" hint="Entrée ou virgule pour ajouter un tag.">
+        <ChipsInput name="tags" defaultValue={project?.tags ?? []} placeholder="ex : Instagram" />
       </Field>
 
       <Field label="Lien externe" htmlFor="link">

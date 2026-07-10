@@ -1,5 +1,7 @@
 import Image from 'next/image';
+import { Trophy, MapPin } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
+import { Icon } from '@/components/ui/icon';
 import { ABOUT, AWARD_MEDAL_SRC } from '@/content/static-copy';
 
 /**
@@ -17,8 +19,8 @@ export function About() {
             <div className="relative flex h-[150px] w-[150px] items-center justify-center rounded-full border-2 border-teal/20 bg-gradient-to-br from-teal-light to-teal-ultra font-display text-[2.8rem] font-bold text-teal">
               {ABOUT.initials}
               {/* .award-pin2 */}
-              <span className="absolute bottom-1 right-1 flex h-[38px] w-[38px] items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-gold to-gold-soft text-base">
-                🏆
+              <span className="absolute bottom-1 right-1 flex h-[38px] w-[38px] items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-gold to-gold-soft">
+                <Trophy className="h-4 w-4 text-white" />
               </span>
             </div>
             <div>
@@ -28,7 +30,10 @@ export function About() {
               <p className="mt-[3px] text-center text-[0.75rem] uppercase tracking-[1.2px] text-teal">
                 {ABOUT.role}
               </p>
-              <p className="mt-[3px] text-center text-[0.75rem] text-ink-muted">{ABOUT.location}</p>
+              <p className="mt-[3px] flex items-center justify-center gap-1 text-[0.75rem] text-ink-muted">
+                <MapPin className="h-3 w-3" />
+                {ABOUT.location}
+              </p>
             </div>
           </div>
 
@@ -39,7 +44,9 @@ export function About() {
                 key={i}
                 className={`p-4 text-center ${i % 2 === 0 ? 'border-r border-line' : ''} ${i < 2 ? 'border-b border-line' : ''}`}
               >
-                <div className="font-display text-[1.4rem] font-bold text-teal">{s.value}</div>
+                <div className="flex justify-center font-display text-[1.4rem] font-bold text-teal">
+                  {'icon' in s && s.icon ? <Icon name={s.icon} className="h-6 w-6" /> : s.value}
+                </div>
                 <div className="mt-[2px] text-[0.62rem] uppercase tracking-[0.8px] text-ink-muted">
                   {s.label}
                 </div>
@@ -98,7 +105,8 @@ export function About() {
               />
             </div>
             <div className="flex-1">
-              <p className="mb-1 text-[0.62rem] uppercase tracking-[2px] text-gold">
+              <p className="mb-1 flex items-center gap-1.5 text-[0.62rem] uppercase tracking-[2px] text-gold">
+                <Icon name={ABOUT.award.tagIcon} className="h-3 w-3" />
                 {ABOUT.award.tag}
               </p>
               <p className="mb-[3px] font-display text-[1.1rem] font-bold text-ink">

@@ -12,11 +12,8 @@ export default async function MediaPage() {
       <p className="mb-8 text-[0.85rem] text-ink-muted">
         Images téléversées et visuels Pexels provisoires.
       </p>
-      <MediaManager
-        assets={assets}
-        r2Enabled={env.r2.isConfigured}
-        pexelsEnabled={env.pexels.isConfigured}
-      />
+      {/* Pexels picker is always available now — curated static URLs, no API key. */}
+      <MediaManager assets={assets} r2Enabled={env.r2.isConfigured} pexelsEnabled />
     </div>
   );
 }

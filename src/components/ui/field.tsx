@@ -19,8 +19,14 @@ export const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.TextareaHTMLAttributes<HTMLTextAreaElement>
 >(function Textarea({ className, ...props }, ref) {
+  // `field-sizing:content` grows the textarea with its content in supporting
+  // browsers; `resize-y` + min-height is the fallback elsewhere.
   return (
-    <textarea ref={ref} className={cn(inputBase, 'min-h-28 resize-y', className)} {...props} />
+    <textarea
+      ref={ref}
+      className={cn(inputBase, 'min-h-28 resize-y [field-sizing:content]', className)}
+      {...props}
+    />
   );
 });
 
@@ -48,7 +54,11 @@ export function Label({
       className={cn('mb-1.5 block text-[0.72rem] uppercase tracking-wide text-ink-mid', className)}
     >
       {children}
-      {required && <span className="ml-0.5 text-teal">*</span>}
+      {required && (
+        <span className="ml-0.5 text-red-500" aria-hidden>
+          *
+        </span>
+      )}
     </label>
   );
 }

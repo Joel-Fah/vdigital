@@ -12,7 +12,7 @@ import {
   importPexelsAction,
   deleteMediaAction,
 } from '@/app/[adminBasePath]/(dashboard)/media/actions';
-import type { PexelsPhoto } from '@/lib/pexels';
+import { CURATED_PEXELS, pexelsUrl, type CuratedPhoto } from '@/lib/pexels-curated';
 
 /** Media library UI (Section 6 admin empty state, Section 7 Pexels). */
 export function MediaManager({
@@ -84,7 +84,7 @@ export function MediaManager({
             onClick={() => setPexelsOpen(true)}
             className="mt-4 inline-flex items-center gap-2 text-[0.8rem] text-teal hover:underline"
           >
-            <Search className="h-3.5 w-3.5" /> ou chercher un visuel sur Pexels
+            <Search className="h-3.5 w-3.5" /> ou ajouter une image Pexels (libre de droits)
           </button>
         )}
       </form>
@@ -145,30 +145,17 @@ export function MediaManager({
   );
 }
 
+/** Curated free-Pexels picker — no API, just a fixed set of on-theme images. */
 function PexelsSearch({ onClose }: { onClose: () => void }) {
-  const [q, setQ] = useState('');
-  const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
-  const [loading, setLoading] = useState(false);
   const [pending, start] = useTransition();
 
-  async function search(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const res = await fetch(`/api/admin/pexels?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-    setPhotos(data.photos ?? []);
-    setLoading(false);
-  }
-
-  function attach(p: PexelsPhoto) {
+  function attach(p: CuratedPhoto) {
     start(() =>
       importPexelsAction({
-        pexelsId: String(p.id),
-        url: p.src.large2x,
+        pexelsId: p.id,
+        url: pexelsUrl(p, 1260),
         altText: p.alt,
-        credit: p.photographer,
-        width: p.width,
-        height: p.height,
+        credit: 'Pexels',
       }).then(() => onClose()),
     );
   }
@@ -183,31 +170,23 @@ function PexelsSearch({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-[1.1rem] font-bold text-ink">Rechercher sur Pexels</h3>
+          <h3 className="font-display text-[1.1rem] font-bold text-ink">
+            Images Pexels (libres de droits)
+          </h3>
           <button onClick={onClose} aria-label="Fermer" className="text-ink-muted hover:text-teal">
             <X className="h-5 w-5" />
           </button>
         </div>
-        <form onSubmit={search} className="mb-4 flex gap-2">
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="ex: marketing team"
-          />
-          <Button type="submit" variant="primary" size="sm" disabled={loading}>
-            {loading ? '…' : 'Chercher'}
-          </Button>
-        </form>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {photos.map((p) => (
+          {CURATED_PEXELS.map((p) => (
             <button
               key={p.id}
               onClick={() => attach(p)}
               disabled={pending}
-              className="group relative aspect-square overflow-hidden rounded border border-line"
+              className="group relative aspect-square overflow-hidden rounded border border-line disabled:opacity-50"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.src.medium} alt={p.alt} className="h-full w-full object-cover" />
+              <img src={pexelsUrl(p, 400)} alt={p.alt} className="h-full w-full object-cover" />
               <span className="absolute inset-0 flex items-center justify-center bg-teal/0 text-[0.7rem] font-medium text-white opacity-0 transition-all group-hover:bg-teal/60 group-hover:opacity-100">
                 Ajouter
               </span>
@@ -215,7 +194,7 @@ function PexelsSearch({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <Label className="mt-4">
-          Les images Pexels sont marquées comme provisoires (à remplacer).
+          Les images Pexels sont provisoires (à remplacer par vos vrais visuels).
         </Label>
       </div>
     </div>

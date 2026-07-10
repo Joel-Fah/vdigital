@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { HERO, LOGO_SRC } from '@/content/static-copy';
+import { Icon } from '@/components/ui/icon';
 
 /**
  * Hero — 1:1 rebuild of the original `.hero` + `.stats-bar`.
@@ -83,9 +84,9 @@ export function Hero() {
                 priority
               />
             </div>
-            <FloatingBadge className="right-[-10px] top-5">{HERO.badges[0]}</FloatingBadge>
-            <FloatingBadge className="bottom-10 left-[-30px]">{HERO.badges[1]}</FloatingBadge>
-            <FloatingBadge className="bottom-[100px] right-[-15px]">{HERO.badges[2]}</FloatingBadge>
+            <FloatingBadge className="right-[-10px] top-5" badge={HERO.badges[0]} />
+            <FloatingBadge className="bottom-10 left-[-30px]" badge={HERO.badges[1]} />
+            <FloatingBadge className="bottom-[100px] right-[-15px]" badge={HERO.badges[2]} />
           </div>
         </div>
       </section>
@@ -111,12 +112,19 @@ export function Hero() {
   );
 }
 
-function FloatingBadge({ children, className }: { children: React.ReactNode; className?: string }) {
+function FloatingBadge({
+  badge,
+  className,
+}: {
+  badge: { icon: 'trophy' | 'bar-chart' | 'sparkle'; text: string };
+  className?: string;
+}) {
   return (
     <div
-      className={`absolute whitespace-nowrap rounded-md border border-line bg-surface-white px-3.5 py-2 text-[0.72rem] text-teal shadow-float ${className}`}
+      className={`absolute inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line bg-surface-white px-3.5 py-2 text-[0.72rem] text-teal shadow-float ${className}`}
     >
-      {children}
+      <Icon name={badge.icon} className="h-3.5 w-3.5" />
+      {badge.text}
     </div>
   );
 }

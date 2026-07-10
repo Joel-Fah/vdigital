@@ -38,7 +38,11 @@ export const HERO = {
     'Je transforme votre présence digitale en véritable levier de croissance. Stratégie, contenu, engagement — je pilote votre marque sur tous les canaux avec précision et créativité.',
   ctaPrimary: 'Travaillons ensemble',
   ctaOutline: 'Voir mes réalisations',
-  badges: ['🏆 Canal+ Creative Talent', '📊 13+ Marques', "✦ 5 ans d'expérience"],
+  badges: [
+    { icon: 'trophy', text: 'Canal+ Creative Talent' },
+    { icon: 'bar-chart', text: '13+ Marques' },
+    { icon: 'sparkle', text: "5 ans d'expérience" },
+  ] as const,
   stats: [
     { value: '5', sup: '+', label: "Années d'expérience" },
     { value: '13', sup: '+', label: 'Marques accompagnées' },
@@ -51,12 +55,12 @@ export const ABOUT = {
   initials: 'VU',
   name: 'Vitus Ahanda',
   role: 'Expert Communication Digitale',
-  location: '📍 Yaoundé, Cameroun',
+  location: 'Yaoundé, Cameroun',
   miniStats: [
     { value: '5+', label: 'Années' },
     { value: '13+', label: 'Clients' },
     { value: '1,6M', label: 'Vues' },
-    { value: '🏆', label: 'Canal+' },
+    { icon: 'trophy' as const, label: 'Canal+' },
   ],
   eyebrow: '— À propos de moi',
   titleLead: 'Stratège digital,',
@@ -69,7 +73,8 @@ export const ABOUT = {
   highlightPost:
     " organisée par le Groupe Canal+, je fais partie des professionnels reconnus pour l'excellence de leur vision créative et stratégique en Afrique.",
   award: {
-    tag: '🌍 Distinction africaine',
+    tagIcon: 'globe' as const,
+    tag: 'Distinction africaine',
     name: 'Lauréat — Canal+ Creative Talent',
     org: 'Canal+ Group · Compétition panafricaine de créativité et communication',
     desc: "Sélectionné parmi les meilleurs talents créatifs du continent africain. Une reconnaissance continentale de l'excellence en stratégie créative, communication et production de contenu à forte valeur ajoutée.",
@@ -85,7 +90,7 @@ export const ABOUT = {
     },
     {
       period: 'Lauréat',
-      role: '🏆 Canal+ Creative Talent',
+      role: 'Canal+ Creative Talent',
       org: 'Canal+ Group · Compétition africaine de créativité et communication',
       gold: true,
     },
@@ -211,18 +216,18 @@ export const SECTORS = [
 
 /** Offres section — static chrome around the DB-driven cards. */
 export const OFFERS_TABS = [
-  { value: 'diagnostic', label: '🔍 Diagnostics' },
-  { value: 'formation', label: '🎓 Formations' },
+  { value: 'diagnostic', label: 'Diagnostics', icon: 'search' },
+  { value: 'formation', label: 'Formations', icon: 'graduation' },
 ] as const;
 
 export const OFFERS_AUDIENCE = {
   diagnostic: {
     label: "— À qui s'adressent ces diagnostics ?",
     items: [
-      { icon: '🏢', label: 'Entreprises', sub: 'PME & startups' },
-      { icon: '🧑‍💼', label: 'Indépendants', sub: 'Freelances & consultants' },
-      { icon: '🎨', label: 'Créateurs', sub: 'Influenceurs & artistes' },
-      { icon: '🌍', label: 'ONG & assos', sub: 'Organisations à impact' },
+      { icon: 'building', label: 'Entreprises', sub: 'PME & startups' },
+      { icon: 'user', label: 'Indépendants', sub: 'Freelances & consultants' },
+      { icon: 'palette', label: 'Créateurs', sub: 'Influenceurs & artistes' },
+      { icon: 'globe', label: 'ONG & assos', sub: 'Organisations à impact' },
     ],
     cta: {
       title: 'Vous ne savez pas quel diagnostic choisir ?',
@@ -232,10 +237,10 @@ export const OFFERS_AUDIENCE = {
   formation: {
     label: "— À qui s'adressent ces formations ?",
     items: [
-      { icon: '🏢', label: 'Équipes marketing', sub: 'En entreprise' },
-      { icon: '🎓', label: 'Étudiants', sub: 'Com & marketing' },
-      { icon: '🚀', label: 'Entrepreneurs', sub: 'Gérer seul ses réseaux' },
-      { icon: '🌍', label: 'Associations', sub: 'Visibilité & impact' },
+      { icon: 'users', label: 'Équipes marketing', sub: 'En entreprise' },
+      { icon: 'graduation', label: 'Étudiants', sub: 'Com & marketing' },
+      { icon: 'rocket', label: 'Entrepreneurs', sub: 'Gérer seul ses réseaux' },
+      { icon: 'globe', label: 'Associations', sub: 'Visibilité & impact' },
     ],
     cta: {
       title: 'Formation individuelle ou pour votre équipe ?',

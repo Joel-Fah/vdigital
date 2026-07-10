@@ -1,5 +1,6 @@
 import 'server-only';
 import { prisma } from '@/lib/prisma';
+import { withRetry } from '@/lib/db-retry';
 
 /**
  * Public content queries. All read paths filter on `visible: true` and order by
@@ -17,7 +18,7 @@ const PROJECTS_TEASER = 4;
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
-    return await fn();
+    return await withRetry(fn);
   } catch (err) {
     console.error('[content] query failed, using fallback:', err);
     return fallback;

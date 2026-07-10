@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import type { MediaAsset, Service } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { ChipsInput } from '@/components/ui/chips-input';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/services/actions';
@@ -36,8 +37,8 @@ export function ServiceForm({
         />
       </Field>
 
-      <Field label="Tags (séparés par des virgules)" htmlFor="tags">
-        <Input id="tags" name="tags" defaultValue={service?.tags.join(', ')} />
+      <Field label="Tags" hint="Entrée ou virgule pour ajouter un tag.">
+        <ChipsInput name="tags" defaultValue={service?.tags ?? []} placeholder="ex : Modération" />
       </Field>
 
       <MediaPicker name="iconId" label="Icône (optionnelle)" defaultAsset={iconAsset} />
