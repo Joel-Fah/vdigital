@@ -3,6 +3,7 @@ import Image from 'next/image';
 import type { MediaAsset, Project } from '@prisma/client';
 import { TagPill } from '@/components/ui/tag-pill';
 import { StatBlock } from '@/components/ui/stat-block';
+import { stripHtml } from '@/lib/utils';
 
 type ProjectWithCover = Project & { coverImage: MediaAsset | null };
 type Result = { label: string; value: string; trend?: string };
@@ -55,7 +56,7 @@ export function ProjectCard({ project, index }: { project: ProjectWithCover; ind
 
       <div className="p-6">
         <p className="mb-4 line-clamp-3 border-l-2 border-teal pl-4 text-[0.85rem] leading-relaxed text-ink-mid">
-          {project.summary}
+          {stripHtml(project.summary)}
         </p>
         {results.length > 0 && (
           <div className="grid-lines mb-4 grid grid-cols-2 overflow-hidden rounded-md sm:grid-cols-4">

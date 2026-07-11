@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { MediaAsset, Offer } from '@prisma/client';
 import { Button } from '@/components/ui/button';
+import { RichText } from '@/components/ui/rich-text';
 
 type OfferDetail = Offer & { image: MediaAsset | null };
 
@@ -40,9 +41,7 @@ export function OfferDrawerContent({ data }: { data: unknown }) {
 
       {offer.priceNote && <p className="text-[0.9rem] font-medium text-teal">{offer.priceNote}</p>}
 
-      <p className="whitespace-pre-line text-[0.88rem] leading-loose text-ink-mid">
-        {offer.description}
-      </p>
+      <RichText html={offer.description} />
 
       {offer.deliverables.length > 0 && (
         <div>

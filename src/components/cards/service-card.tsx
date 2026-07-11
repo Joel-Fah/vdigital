@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import type { MediaAsset, Service } from '@prisma/client';
 import { TagPill } from '@/components/ui/tag-pill';
+import { stripHtml } from '@/lib/utils';
 
 type ServiceWithIcon = Service & { icon: MediaAsset | null };
 
@@ -28,7 +29,7 @@ export function ServiceCard({ service }: { service: ServiceWithIcon }) {
       </div>
       <h3 className="mb-2 text-[1rem] font-medium text-ink">{service.title}</h3>
       <p className="line-clamp-3 text-[0.83rem] leading-relaxed text-ink-muted">
-        {service.description}
+        {stripHtml(service.description)}
       </p>
       {service.tags.length > 0 && (
         <div className="mt-3.5 flex flex-wrap gap-1.5">

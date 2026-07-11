@@ -8,11 +8,14 @@ import { env } from '@/lib/env';
 import { processUpload } from '@/lib/image';
 import { uploadToR2, deleteFromR2, keyFromPublicUrl } from '@/lib/r2';
 import { uploadMediaSchema, updateAltSchema, importPexelsSchema } from '@/lib/validation/media';
+import type { MediaAsset } from '@prisma/client';
 
 export type ActionResult = { ok: boolean; error?: string };
+/** Upload result carries the created asset so callers (MediaPicker) can select it. */
+export type UploadResult = ActionResult & { asset?: MediaAsset };
 
 /** Upload → sniff/resize/compress → R2 → MediaAsset (Section 7.6). */
-export async function uploadMediaAction(formData: FormData): Promise<ActionResult> {
+export async function uploadMediaAction(formData: FormData): Promise<UploadResult> {
   await requireAdmin();
 
   if (!env.r2.isConfigured) {
@@ -35,7 +38,7 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
     const key = `uploads/${randomUUID()}.${processed.ext}`;
     const url = await uploadToR2(key, processed.buffer, processed.contentType);
 
-    await prisma.mediaAsset.create({
+    const asset = await prisma.mediaAsset.create({
       data: {
         url,
         altText: parsed.data.altText,
@@ -47,7 +50,7 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
       },
     });
     revalidatePath(`/${env.ADMIN_BASE_PATH}/media`);
-    return { ok: true };
+    return { ok: true, asset };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'Échec du téléversement.' };
   }

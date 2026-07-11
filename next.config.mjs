@@ -33,7 +33,7 @@ const nextConfig = {
       `img-src 'self' data: blob: https://images.pexels.com ${r2Host ? `https://${r2Host}` : ''}`,
       "font-src 'self' data:",
       "frame-src https://challenges.cloudflare.com",
-      "connect-src 'self' https://api.pexels.com https://challenges.cloudflare.com",
+      "connect-src 'self' https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

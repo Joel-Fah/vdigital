@@ -6,6 +6,8 @@ import type { MediaAsset, Offer } from '@prisma/client';
 import { Package } from 'lucide-react';
 import { Section, SectionHeader } from '@/components/ui/section';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Icon } from '@/components/ui/icon';
+import { stripHtml } from '@/lib/utils';
 import {
   SECTION_COPY,
   OFFERS_TABS,
@@ -45,8 +47,9 @@ export function OffersSection({ offers }: { offers: OfferWithImage[] }) {
             <Tabs.Trigger
               key={t.value}
               value={t.value}
-              className="bg-surface-white px-7 py-2.5 text-[0.78rem] uppercase tracking-[1px] text-ink-muted transition-all duration-200 hover:bg-teal-ultra hover:text-teal data-[state=active]:bg-teal data-[state=active]:text-white"
+              className="inline-flex items-center gap-2 bg-surface-white px-7 py-2.5 text-[0.78rem] uppercase tracking-[1px] text-ink-muted transition-all duration-200 hover:bg-teal-ultra hover:text-teal data-[state=active]:bg-teal data-[state=active]:text-white"
             >
+              <Icon name={t.icon} className="h-4 w-4" />
               {t.label}
             </Tabs.Trigger>
           ))}
@@ -91,7 +94,9 @@ export function OffersSection({ offers }: { offers: OfferWithImage[] }) {
               <div className="grid-lines mb-6 grid grid-cols-2 overflow-hidden rounded-md md:grid-cols-4">
                 {audience.items.map((a) => (
                   <div key={a.label} className="bg-teal-ultra p-[1.1rem] text-center">
-                    <div className="mb-1 text-[1.1rem]">{a.icon}</div>
+                    <div className="mb-1.5 flex justify-center text-teal">
+                      <Icon name={a.icon} className="h-5 w-5" strokeWidth={1.5} />
+                    </div>
                     <div className="text-[0.75rem] font-medium text-ink">{a.label}</div>
                     <div className="mt-[2px] text-[0.62rem] text-ink-muted">{a.sub}</div>
                   </div>
@@ -147,7 +152,9 @@ function DiagnosticCard({ offer, index }: { offer: OfferWithImage; index: number
       </div>
       {offer.icon && <div className="mb-[0.8rem] text-[1.4rem]">{offer.icon}</div>}
       <p className="mb-2 text-[1rem] font-medium text-ink">{offer.name}</p>
-      <p className="mb-[1.2rem] text-[0.8rem] leading-[1.7] text-ink-muted">{offer.description}</p>
+      <p className="mb-[1.2rem] text-[0.8rem] leading-[1.7] text-ink-muted">
+        {stripHtml(offer.description)}
+      </p>
 
       {offer.deliverables.length > 0 && (
         <div className="mb-[1.2rem] flex flex-col gap-[5px]">
@@ -190,7 +197,9 @@ function FormationCard({ offer }: { offer: OfferWithImage }) {
         )}
       </div>
       <div className="px-[1.6rem] py-[1.4rem]">
-        <p className="mb-4 text-[0.8rem] leading-[1.7] text-ink-muted">{offer.description}</p>
+        <p className="mb-4 text-[0.8rem] leading-[1.7] text-ink-muted">
+          {stripHtml(offer.description)}
+        </p>
         {offer.deliverables.length > 0 && (
           <div className="mb-[1.2rem] flex flex-col gap-1">
             {offer.deliverables.map((m) => (

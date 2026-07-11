@@ -3,6 +3,9 @@
 import { useActionState } from 'react';
 import type { MediaAsset, Project } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { ChipsInput } from '@/components/ui/chips-input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Combobox } from '@/components/ui/combobox';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/projects/actions';
@@ -14,11 +17,13 @@ export function ProjectForm({
   cancelHref,
   project,
   coverAsset,
+  categories = [],
 }: {
   action: (state: FormResult, formData: FormData) => Promise<FormResult>;
   cancelHref: string;
   project?: Project | null;
   coverAsset?: MediaAsset | null;
+  categories?: string[];
 }) {
   const [state, formAction] = useActionState<FormResult, FormData>(action, {});
   const results = (project?.resultsJson as Result[] | null) ?? [];
@@ -38,13 +43,27 @@ export function ProjectForm({
         <Field label="Client" htmlFor="client">
           <Input id="client" name="client" defaultValue={project?.client ?? ''} />
         </Field>
-        <Field label="Catégorie" htmlFor="category">
-          <Input id="category" name="category" defaultValue={project?.category ?? ''} />
+        <Field
+          label="Catégorie"
+          htmlFor="category"
+          hint="Choisissez une catégorie existante ou saisissez-en une nouvelle."
+        >
+          <Combobox
+            id="category"
+            name="category"
+            options={categories}
+            defaultValue={project?.category ?? ''}
+            placeholder="ex : Grande distribution"
+          />
         </Field>
       </div>
 
-      <Field label="Résumé / mission" htmlFor="summary" required>
-        <Textarea id="summary" name="summary" defaultValue={project?.summary} required />
+      <Field
+        label="Résumé / mission"
+        required
+        tooltip="Décrivez le contexte et la mission : le défi du client, votre rôle, l'approche. Mise en forme possible (gras, listes, liens). C'est le texte principal affiché dans le tiroir du projet."
+      >
+        <RichTextEditor name="summary" defaultValue={project?.summary ?? ''} />
       </Field>
 
       <Field
@@ -60,8 +79,8 @@ export function ProjectForm({
         />
       </Field>
 
-      <Field label="Tags (séparés par des virgules)" htmlFor="tags">
-        <Input id="tags" name="tags" defaultValue={project?.tags.join(', ')} />
+      <Field label="Tags" hint="Entrée ou virgule pour ajouter un tag.">
+        <ChipsInput name="tags" defaultValue={project?.tags ?? []} placeholder="ex : Instagram" />
       </Field>
 
       <Field label="Lien externe" htmlFor="link">

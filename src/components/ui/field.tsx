@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { HelpTip } from '@/components/ui/help-tip';
 
 /** Shared form field primitives — used by the contact form and all admin forms. */
 
@@ -19,8 +20,14 @@ export const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.TextareaHTMLAttributes<HTMLTextAreaElement>
 >(function Textarea({ className, ...props }, ref) {
+  // `field-sizing:content` grows the textarea with its content in supporting
+  // browsers; `resize-y` + min-height is the fallback elsewhere.
   return (
-    <textarea ref={ref} className={cn(inputBase, 'min-h-28 resize-y', className)} {...props} />
+    <textarea
+      ref={ref}
+      className={cn(inputBase, 'min-h-28 resize-y [field-sizing:content]', className)}
+      {...props}
+    />
   );
 });
 
@@ -48,7 +55,11 @@ export function Label({
       className={cn('mb-1.5 block text-[0.72rem] uppercase tracking-wide text-ink-mid', className)}
     >
       {children}
-      {required && <span className="ml-0.5 text-teal">*</span>}
+      {required && (
+        <span className="ml-0.5 text-red-500" aria-hidden>
+          *
+        </span>
+      )}
     </label>
   );
 }
@@ -64,6 +75,7 @@ export function Field({
   required,
   error,
   hint,
+  tooltip,
   children,
 }: {
   label?: string;
@@ -71,14 +83,19 @@ export function Field({
   required?: boolean;
   error?: string;
   hint?: string;
+  /** Extra guidance shown via a "?" popover next to the label (complex fields). */
+  tooltip?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
       {label && (
-        <Label htmlFor={htmlFor} required={required}>
-          {label}
-        </Label>
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Label htmlFor={htmlFor} required={required} className="mb-0">
+            {label}
+          </Label>
+          {tooltip && <HelpTip text={tooltip} />}
+        </div>
       )}
       {children}
       {hint && !error && <p className="mt-1 text-[0.72rem] text-ink-muted">{hint}</p>}

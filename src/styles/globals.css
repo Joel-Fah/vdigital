@@ -85,6 +85,42 @@
     @apply border-l-2 border-teal bg-teal-ultra;
   }
 
+  /* Rendered rich text (Tiptap output). Text formatting only — no layout. */
+  .prose-vd {
+    @apply text-[0.88rem] leading-[1.85] text-ink-mid;
+  }
+  .prose-vd p {
+    margin-bottom: 0.85rem;
+  }
+  .prose-vd p:last-child {
+    margin-bottom: 0;
+  }
+  .prose-vd strong {
+    @apply font-semibold text-ink;
+  }
+  .prose-vd em {
+    font-style: italic;
+  }
+  .prose-vd a {
+    @apply text-teal underline underline-offset-2 hover:text-teal-dark;
+  }
+  .prose-vd ul,
+  .prose-vd ol {
+    margin: 0 0 0.85rem 1.25rem;
+  }
+  .prose-vd ul {
+    list-style: disc;
+  }
+  .prose-vd ol {
+    list-style: decimal;
+  }
+  .prose-vd li {
+    margin-bottom: 0.25rem;
+  }
+  .prose-vd blockquote {
+    @apply my-3 border-l-2 border-teal pl-4 text-ink-mid;
+  }
+
   /* Skeleton shimmer for progressive-loading placeholders (Section 5.1). */
   .skeleton {
     @apply relative overflow-hidden bg-teal-ultra;

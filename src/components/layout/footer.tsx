@@ -12,7 +12,7 @@ export function Footer({ settings }: { settings: SiteSettings | null }) {
   const links = Object.entries(social).filter(([, href]) => Boolean(href));
 
   return (
-    <footer className="flex flex-col items-center gap-2 border-t border-line bg-surface-white px-6 py-6 text-center md:flex-row md:justify-between md:px-20 md:text-left">
+    <footer className="flex flex-col items-center gap-2 border-t border-line bg-surface-white px-6 py-6 text-center md:flex-row md:justify-between md:px-12 md:text-left lg:px-20">
       {/* .footer-brand */}
       <div className="flex items-center gap-2">
         <Image

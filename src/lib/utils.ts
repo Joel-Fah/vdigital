@@ -17,6 +17,19 @@ export function slugify(input: string): string {
     .slice(0, 80);
 }
 
+/** Strip HTML tags to plain text (for card previews / meta descriptions). */
+export function stripHtml(html: string | null | undefined): string {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Format a Date consistently regardless of locale/timezone drift. */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;

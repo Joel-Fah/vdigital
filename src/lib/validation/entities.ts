@@ -1,10 +1,20 @@
 import { z } from 'zod';
+import { stripHtml } from '@/lib/utils';
 
 /**
  * Entity schemas (Section 8.4) — the single validation source for admin forms
  * and their server actions. Arrays arrive as delimited text from the form and
  * are normalised by `parseList`; booleans by `parseBool`.
+ *
+ * Long fields hold rich-text HTML from the Tiptap editor; `richText()` validates
+ * the *visible* text length (tags stripped) and caps raw length. The HTML is
+ * sanitized on write in the server actions (src/lib/html.ts).
  */
+const richText = (min: number, message: string) =>
+  z
+    .string()
+    .max(12000)
+    .refine((v) => stripHtml(v).length >= min, { message });
 
 const optionalUrl = z
   .string()
@@ -25,7 +35,7 @@ export const projectSchema = z.object({
   title: z.string().trim().min(2, 'Titre requis').max(160),
   client: optionalText(120),
   category: optionalText(120),
-  summary: z.string().trim().min(10, 'Résumé trop court').max(4000),
+  summary: richText(10, 'Résumé trop court'),
   link: optionalUrl,
   coverImageId: optionalText(60),
   tags: z.array(z.string().trim().min(1)).max(20).default([]),
@@ -46,7 +56,7 @@ export const projectSchema = z.object({
 
 export const serviceSchema = z.object({
   title: z.string().trim().min(2, 'Titre requis').max(160),
-  description: z.string().trim().min(10, 'Description trop courte').max(4000),
+  description: richText(10, 'Description trop courte'),
   iconId: optionalText(60),
   tags: z.array(z.string().trim().min(1)).max(20).default([]),
   featured: z.boolean().default(false),
@@ -75,7 +85,7 @@ export const offerSchema = z.object({
   // Which tab the offer appears under in the "Diagnostics & Formations" section.
   kind: z.enum(['diagnostic', 'formation']).default('diagnostic'),
   name: z.string().trim().min(2, 'Nom requis').max(160),
-  description: z.string().trim().min(10, 'Description trop courte').max(4000),
+  description: richText(10, 'Description trop courte'),
   /** Diagnostics: the "includes" checklist. Formations: the module list. */
   deliverables: z.array(z.string().trim().min(1)).max(30).default([]),
   /** Diagnostics: corner badge. Formations: level. */
