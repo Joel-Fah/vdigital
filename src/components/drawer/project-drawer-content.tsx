@@ -7,6 +7,7 @@ import type { MediaAsset, Project } from '@prisma/client';
 import { TagPill } from '@/components/ui/tag-pill';
 import { StatBlock } from '@/components/ui/stat-block';
 import { Button } from '@/components/ui/button';
+import { RichText } from '@/components/ui/rich-text';
 
 type ProjectDetail = Project & { coverImage: MediaAsset | null; gallery: MediaAsset[] };
 type Result = { label: string; value: string; trend?: string };
@@ -59,9 +60,7 @@ export function ProjectDrawerContent({ data }: { data: unknown }) {
         </div>
       )}
 
-      <p className="whitespace-pre-line text-[0.88rem] leading-loose text-ink-mid">
-        {project.summary}
-      </p>
+      <RichText html={project.summary} />
 
       {results.length > 0 && (
         <div className="grid-lines grid grid-cols-2 overflow-hidden rounded-md border border-line">

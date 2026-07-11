@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin, adminPath } from '@/lib/admin';
 import { uniqueSlug } from '@/lib/slug';
 import { projectSchema, parseList, parseBool } from '@/lib/validation/entities';
+import { sanitizeRichText } from '@/lib/html';
 
 export type FormResult = { error?: string };
 
@@ -54,7 +55,7 @@ export async function createProjectAction(_p: FormResult, formData: FormData): P
       title: d.title,
       client: d.client ?? null,
       category: d.category ?? null,
-      summary: d.summary,
+      summary: sanitizeRichText(d.summary),
       link: d.link ?? null,
       coverImageId: d.coverImageId || null,
       tags: d.tags,
@@ -84,7 +85,7 @@ export async function updateProjectAction(
       title: d.title,
       client: d.client ?? null,
       category: d.category ?? null,
-      summary: d.summary,
+      summary: sanitizeRichText(d.summary),
       link: d.link ?? null,
       coverImageId: d.coverImageId || null,
       tags: d.tags,

@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import type { MediaAsset, Project } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
 import { ChipsInput } from '@/components/ui/chips-input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Combobox } from '@/components/ui/combobox';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
@@ -59,11 +60,10 @@ export function ProjectForm({
 
       <Field
         label="Résumé / mission"
-        htmlFor="summary"
         required
-        tooltip="Décrivez le contexte et la mission : le défi du client, votre rôle, l'approche. C'est le texte principal affiché dans le tiroir du projet."
+        tooltip="Décrivez le contexte et la mission : le défi du client, votre rôle, l'approche. Mise en forme possible (gras, listes, liens). C'est le texte principal affiché dans le tiroir du projet."
       >
-        <Textarea id="summary" name="summary" defaultValue={project?.summary} required />
+        <RichTextEditor name="summary" defaultValue={project?.summary ?? ''} />
       </Field>
 
       <Field

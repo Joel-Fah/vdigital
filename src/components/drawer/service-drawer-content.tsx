@@ -2,6 +2,7 @@ import { ExternalLink, Sparkles } from 'lucide-react';
 import type { MediaAsset, Service } from '@prisma/client';
 import { TagPill } from '@/components/ui/tag-pill';
 import { Button } from '@/components/ui/button';
+import { RichText } from '@/components/ui/rich-text';
 
 type ServiceDetail = Service & { icon: MediaAsset | null };
 
@@ -18,9 +19,7 @@ export function ServiceDrawerContent({ data }: { data: unknown }) {
         )}
       </div>
 
-      <p className="whitespace-pre-line text-[0.88rem] leading-loose text-ink-mid">
-        {service.description}
-      </p>
+      <RichText html={service.description} />
 
       {service.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

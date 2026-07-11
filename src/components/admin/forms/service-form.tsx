@@ -2,8 +2,9 @@
 
 import { useActionState } from 'react';
 import type { MediaAsset, Service } from '@prisma/client';
-import { Field, Input, Textarea } from '@/components/ui/field';
+import { Field, Input } from '@/components/ui/field';
 import { ChipsInput } from '@/components/ui/chips-input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/services/actions';
@@ -28,13 +29,8 @@ export function ServiceForm({
         <Input id="title" name="title" defaultValue={service?.title} required />
       </Field>
 
-      <Field label="Description" htmlFor="description" required>
-        <Textarea
-          id="description"
-          name="description"
-          defaultValue={service?.description}
-          required
-        />
+      <Field label="Description" required>
+        <RichTextEditor name="description" defaultValue={service?.description ?? ''} />
       </Field>
 
       <Field label="Tags" hint="Entrée ou virgule pour ajouter un tag.">

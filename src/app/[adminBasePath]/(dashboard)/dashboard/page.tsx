@@ -1,46 +1,36 @@
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
 import { adminPath } from '@/lib/admin';
-import { withRetry } from '@/lib/db-retry';
+import { getDashboardStats } from '@/lib/dashboard-stats';
+import { DashboardCharts } from '@/components/admin/dashboard-charts';
 
 export const dynamic = 'force-dynamic';
 
-/** Admin overview — content counts + unread messages, each a quick link. */
+/** Admin overview — KPI tiles + charts bento (content mix + activity). */
 export default async function DashboardPage() {
-  // withRetry rides out Neon cold-starts so the dashboard doesn't error on the
-  // first request after the DB has been idle.
-  const [projects, services, clients, expertise, offers, testimonials, unread, media] =
-    await withRetry(() =>
-      Promise.all([
-        prisma.project.count(),
-        prisma.service.count(),
-        prisma.clientLogo.count(),
-        prisma.expertiseItem.count(),
-        prisma.offer.count(),
-        prisma.testimonial.count(),
-        prisma.contactMessage.count({ where: { read: false } }),
-        prisma.mediaAsset.count(),
-      ]),
-    );
+  const stats = await getDashboardStats();
+  const t = stats.totals;
 
   const cards = [
-    { label: 'Projets', value: projects, sub: 'projects' },
-    { label: 'Services', value: services, sub: 'services' },
-    { label: 'Clients', value: clients, sub: 'clients' },
-    { label: 'Expertise', value: expertise, sub: 'expertise' },
-    { label: 'Offres', value: offers, sub: 'offers' },
-    { label: 'Témoignages', value: testimonials, sub: 'testimonials' },
-    { label: 'Messages non lus', value: unread, sub: 'messages', highlight: unread > 0 },
-    { label: 'Médias', value: media, sub: 'media' },
+    { label: 'Projets', value: t.projects, sub: 'projects' },
+    { label: 'Services', value: t.services, sub: 'services' },
+    { label: 'Clients', value: t.clients, sub: 'clients' },
+    { label: 'Expertise', value: t.expertise, sub: 'expertise' },
+    { label: 'Offres', value: t.offers, sub: 'offers' },
+    { label: 'Témoignages', value: t.testimonials, sub: 'testimonials' },
+    { label: 'Messages non lus', value: t.unread, sub: 'messages', highlight: t.unread > 0 },
+    { label: 'Médias', value: t.media, sub: 'media' },
   ];
 
   return (
-    <div>
-      <h1 className="mb-1 font-display text-[1.6rem] font-bold text-ink">Tableau de bord</h1>
-      <p className="mb-8 text-[0.85rem] text-ink-muted">
-        Vue d'ensemble du contenu. Tout est modifiable ici, sans redéploiement.
-      </p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="mb-1 font-display text-[1.6rem] font-bold text-ink">Tableau de bord</h1>
+        <p className="text-[0.85rem] text-ink-muted">
+          Vue d&apos;ensemble du contenu. Tout est modifiable ici, sans redéploiement.
+        </p>
+      </div>
 
+      {/* KPI tiles */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <Link
@@ -55,6 +45,9 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Charts bento */}
+      <DashboardCharts stats={stats} />
     </div>
   );
 }

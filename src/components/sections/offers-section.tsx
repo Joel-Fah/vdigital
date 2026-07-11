@@ -7,6 +7,7 @@ import { Package } from 'lucide-react';
 import { Section, SectionHeader } from '@/components/ui/section';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
+import { stripHtml } from '@/lib/utils';
 import {
   SECTION_COPY,
   OFFERS_TABS,
@@ -151,7 +152,9 @@ function DiagnosticCard({ offer, index }: { offer: OfferWithImage; index: number
       </div>
       {offer.icon && <div className="mb-[0.8rem] text-[1.4rem]">{offer.icon}</div>}
       <p className="mb-2 text-[1rem] font-medium text-ink">{offer.name}</p>
-      <p className="mb-[1.2rem] text-[0.8rem] leading-[1.7] text-ink-muted">{offer.description}</p>
+      <p className="mb-[1.2rem] text-[0.8rem] leading-[1.7] text-ink-muted">
+        {stripHtml(offer.description)}
+      </p>
 
       {offer.deliverables.length > 0 && (
         <div className="mb-[1.2rem] flex flex-col gap-[5px]">
@@ -194,7 +197,9 @@ function FormationCard({ offer }: { offer: OfferWithImage }) {
         )}
       </div>
       <div className="px-[1.6rem] py-[1.4rem]">
-        <p className="mb-4 text-[0.8rem] leading-[1.7] text-ink-muted">{offer.description}</p>
+        <p className="mb-4 text-[0.8rem] leading-[1.7] text-ink-muted">
+          {stripHtml(offer.description)}
+        </p>
         {offer.deliverables.length > 0 && (
           <div className="mb-[1.2rem] flex flex-col gap-1">
             {offer.deliverables.map((m) => (

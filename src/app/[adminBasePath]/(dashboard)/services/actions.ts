@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin, adminPath } from '@/lib/admin';
 import { uniqueSlug } from '@/lib/slug';
 import { serviceSchema, parseList, parseBool } from '@/lib/validation/entities';
+import { sanitizeRichText } from '@/lib/html';
 
 export type FormResult = { error?: string };
 
@@ -30,7 +31,7 @@ export async function createServiceAction(_p: FormResult, formData: FormData): P
     data: {
       slug: await uniqueSlug('service', d.title),
       title: d.title,
-      description: d.description,
+      description: sanitizeRichText(d.description),
       iconId: d.iconId || null,
       tags: d.tags,
       featured: d.featured,
@@ -55,7 +56,7 @@ export async function updateServiceAction(
     data: {
       slug: await uniqueSlug('service', d.title, id),
       title: d.title,
-      description: d.description,
+      description: sanitizeRichText(d.description),
       iconId: d.iconId || null,
       tags: d.tags,
       featured: d.featured,

@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import type { MediaAsset, Offer } from '@prisma/client';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/offers/actions';
@@ -42,8 +43,8 @@ export function OfferForm({
         <Input id="name" name="name" defaultValue={offer?.name} required />
       </Field>
 
-      <Field label="Description" htmlFor="description" required>
-        <Textarea id="description" name="description" defaultValue={offer?.description} required />
+      <Field label="Description" required>
+        <RichTextEditor name="description" defaultValue={offer?.description ?? ''} />
       </Field>
 
       <Field

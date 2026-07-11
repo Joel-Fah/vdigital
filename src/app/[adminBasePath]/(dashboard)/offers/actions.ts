@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin, adminPath } from '@/lib/admin';
 import { uniqueSlug } from '@/lib/slug';
 import { offerSchema, parseList, parseBool } from '@/lib/validation/entities';
+import { sanitizeRichText } from '@/lib/html';
 
 export type FormResult = { error?: string };
 
@@ -35,7 +36,7 @@ export async function createOfferAction(_p: FormResult, formData: FormData): Pro
       slug: await uniqueSlug('offer', d.name),
       kind: d.kind,
       name: d.name,
-      description: d.description,
+      description: sanitizeRichText(d.description),
       deliverables: d.deliverables,
       badge: d.badge ?? null,
       duration: d.duration ?? null,
@@ -64,7 +65,7 @@ export async function updateOfferAction(
       slug: await uniqueSlug('offer', d.name, id),
       kind: d.kind,
       name: d.name,
-      description: d.description,
+      description: sanitizeRichText(d.description),
       deliverables: d.deliverables,
       badge: d.badge ?? null,
       duration: d.duration ?? null,
