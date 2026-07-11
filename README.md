@@ -26,6 +26,7 @@ and — just as importantly — **why** each decision was made.
 13. [Design decisions & trade-offs](#13-design-decisions--trade-offs)
 14. [Known gaps & roadmap](#14-known-gaps--roadmap)
 15. [Project structure](#15-project-structure)
+16. [v1.0 change summary](#16-v10-change-summary)
 
 ---
 
@@ -43,7 +44,15 @@ full listing pages (`/projects`, `/services`) with progressive loading. Project,
 and offer details open in a **right-side drawer**, not dedicated pages. Behind an
 obscured, authenticated path sits a dashboard with full CRUD over every content type,
 a media library (uploads + Pexels placeholders), a contact-message inbox, site settings,
-and homepage section ordering.
+homepage section ordering, and an at-a-glance charts overview.
+
+> **v1.0 (current).** On top of the initial rebuild this release adds: an interactive
+> hero (polaroid portrait + cursor-reactive background), a sticky About sidebar, an
+> all-icons (no-emoji) treatment, full mobile drawers for both the public nav and the
+> dashboard, a WYSIWYG editor for long text, GitHub-style tag chips, a category
+> combobox, in-form image upload, drag-to-reorder sections, a Chart.js dashboard, a
+> Neon cold-start retry, Turbopack dev, and a curated (API-free) Pexels flow. The full
+> list is in [§16](#16-v10-change-summary).
 
 ---
 
@@ -59,15 +68,18 @@ and homepage section ordering.
 | Animation          | Motion (formerly Framer Motion)                         | 11.18.x (`motion` package)          |
 | Primitives         | Radix UI (Dialog, Tabs, Dropdown, …)                    | 1.x                                 |
 | Forms / validation | React Hook Form + Zod                                   | 7.x / 3.25.x                        |
+| Rich text          | Tiptap (WYSIWYG) + sanitize-html                        | 3.x / 2.x                           |
+| Charts             | Chart.js + react-chartjs-2                              | 4.x / 5.x                           |
 | ORM                | Prisma                                                  | **6.19.x**                          |
 | Database           | PostgreSQL (Neon serverless)                            | —                                   |
 | Auth               | Auth.js (NextAuth) Credentials + argon2                 | **5.0.0-beta.31**                   |
 | Object storage     | Cloudflare R2 via `@aws-sdk/client-s3`                  | 3.x                                 |
 | Image processing   | sharp                                                   | 0.33.x                              |
-| Placeholders       | Pexels API                                              | —                                   |
+| Placeholders       | Pexels (curated static URLs, no API)                    | —                                   |
 | Bot protection     | Cloudflare Turnstile                                    | —                                   |
 | Email              | Nodemailer (Zoho SMTP or similar)                       | 6.x                                 |
-| Package manager    | pnpm                                                    | 9.x                                 |
+| Package manager    | pnpm (+ dotenv-cli for Prisma scripts)                  | 9.x                                 |
+| Dev bundler        | Turbopack (`next dev --turbopack`)                      | —                                   |
 | Lint/format        | ESLint 9 (flat config) + Prettier + Husky + lint-staged | —                                   |
 | CI                 | GitHub Actions (lint · typecheck · build · audit)       | —                                   |
 
@@ -106,6 +118,12 @@ try/catch with an empty fallback, so a missing or unreachable database degrades 
 designed empty states rather than a 500 — important on first deploy, before the DB is
 migrated/seeded.
 
+**Cold-start resilience** (`src/lib/db-retry.ts`). Neon's free tier scales the compute
+to zero after a few minutes idle; the first query after that surfaces as `P1001` /
+`Connection closed` before Prisma reconnects. `withRetry()` retries connection-class
+errors with backoff so the wake-up is invisible instead of flashing empty states. It
+wraps the public reads (via `safe`) and the dashboard/stats queries.
+
 ---
 
 ## 4. The design system
@@ -122,8 +140,16 @@ CSS gradients/borders reference them exactly as the source did).
 - **Shape/motion:** `rounded` defaults to **2px**; shadows are teal-tinted
   (`shadow-card`, `shadow-float`); transitions 200ms; grid-line dividers reproduced with
   a 1px background-gap (`.grid-lines`).
-- **Primitives** (`src/components/ui/`): `Button` (primary/outline/cta), `Eyebrow`,
-  `StatBlock`, `SkillBar`, `TagPill`, `EmptyState`, `Drawer`, `Reveal`, form fields.
+- **Icons, not emoji (v1.0).** All UI glyphs are lucide icons; serialisable data
+  references an icon by a short key via `Icon` (`src/components/ui/icon.tsx`) so nothing
+  ships raw emoji.
+- **Primitives** (`src/components/ui/`): `Button`, `Eyebrow`, `StatBlock`, `SkillBar`,
+  `TagPill`, `EmptyState`, `Drawer`, `Reveal`, `Icon`, `HelpTip` (tooltip), `Combobox`,
+  `ChipsInput`, `RichTextEditor` / `RichText`, and the form fields.
+- **Interactive hero (v1.0):** `components/sections/hero.tsx` is a client component —
+  polaroid portrait centre stage, badges flanking, and soft teal blobs that parallax
+  toward the cursor over a masked dot grid. The About sidebar sticks while its taller
+  column scrolls.
 - **Living style guide:** `/dev/style-guide` renders every primitive + swatch. It 404s
   in production and is never linked in nav.
 
@@ -144,6 +170,8 @@ Prisma schema: `prisma/schema.prisma`. Content entities all share `order` + `vis
   Projects hold `resultsJson` (KPI array) and a `gallery` many-to-many with media.
   `Offer.kind` (`diagnostic` | `formation`) selects which tab of the
   "Diagnostics & Formations" section the offer renders in, and switches its card shape.
+  Their long fields (project `summary`, service/offer `description`) store **sanitized
+  rich-text HTML** from the Tiptap editor (see [§6](#6-key-ux-behaviours--how-they-work)).
 - **`ClientLogo`, `ExpertiseItem`, `Testimonial`** — simpler list entities.
 - **`MediaAsset`** — one row per image; `source` is `upload` | `pexels` with
   `pexelsId`/`pexelsCredit` for traceability. Referenced by every content type via named
@@ -154,7 +182,7 @@ Prisma schema: `prisma/schema.prisma`. Content entities all share `order` + `vis
 - **`LoginAttempt`** — audit + rate-limit source (login _and_, via a synthetic
   identifier, contact submissions).
 
-The **seed** (`prisma/seed.ts`) creates the nine sections, the admin user (from env),
+The **seed** (`prisma/seed.ts`) creates the ten sections, the admin user (from env),
 and the settings singleton — and **deliberately leaves all content tables empty** so the
 empty states are exercised on first run and the client enters real content themselves.
 
@@ -163,10 +191,25 @@ empty states are exercised on first run and the client enters real content thems
 ## 6. Key UX behaviours & how they work
 
 **Scrollspy nav** (`components/layout/nav.tsx`) — an `IntersectionObserver` highlights
-the section in view on `/`; standalone `/projects` and `/services` links highlight by
-`usePathname()`. Anchor links smooth-scroll with `scroll-margin-top` equal to the header
-height (via a CSS variable), not a hardcoded offset. Mobile collapses to an animated
-menu that closes on link-click or Escape.
+the section in view on `/`; anchor links smooth-scroll with `scroll-margin-top` equal to
+the header height (via a CSS variable), not a hardcoded offset. On mobile it opens a
+**full-screen drawer** whose tabs reveal top→bottom and which locks page scroll while
+open; the dashboard has the same treatment (`components/admin/admin-mobile-bar.tsx`),
+with the sidebar on `lg+`.
+
+**Rich text (v1.0)** — long fields use a lightweight **Tiptap** WYSIWYG
+(`RichTextEditor`: bold/italic/strike/lists/links, no layout). It emits HTML into a
+hidden input so it submits inside the plain forms; the server action **sanitizes on
+write** (`src/lib/html.ts`, `sanitize-html`) so the DB only ever holds safe markup.
+Rendered with `<RichText>` (`.prose-vd` styles) in the drawers, and stripped to plain
+text (`stripHtml`) for card previews and meta.
+
+**Dashboard charts (v1.0)** — the overview is KPI tiles + a Chart.js bento: a
+content-breakdown doughnut, a 30-day messages line, a media-by-source bar, and a
+recent-messages table (`components/admin/dashboard-charts.tsx`,
+`src/lib/dashboard-stats.ts`). The categorical palette is taken from the dataviz skill's
+**validated** reference and re-checked with its validator; legends + the table satisfy
+the relief rule for the lower-contrast slots. Each panel has a "no data yet" state.
 
 **Progressive loading** (`components/listing/`) — the server renders the first page (9
 items, `order`-sorted); a client `useInfinite` hook observes a sentinel and appends
@@ -224,11 +267,15 @@ Images only, no video (this phase). Uploads are sniffed, auto-rotated, resized t
 egress). **Alt text is required** on upload (Zod-enforced) — this is what keeps
 accessibility/SEO holding up as content changes.
 
-Where a real photo is missing, the **Pexels** integration (dashboard → Médias → "chercher
-sur Pexels") attaches a tasteful placeholder, stored with `source:"pexels"`, its
-`pexelsId`, and the photographer credit, and badged **Pexels** in the library. Every
-placeholder is tracked in **`MEDIA_TODO.md`** (a living deliverable — tick items off as
-real photos replace them; grep `PEXELS-PLACEHOLDER` for inline markers).
+Where a real photo is missing, the **Pexels** flow (dashboard → Médias → "ajouter une
+image Pexels") attaches a placeholder from a **curated list of verified free Pexels
+URLs** (`src/lib/pexels-curated.ts`) — **no API key** (the v1.0 decision to drop the
+Pexels API). Stored with `source:"pexels"` and badged **Pexels** in the library; the
+same list also powers the random login-page backdrop. Every placeholder is tracked in
+**`MEDIA_TODO.md`** (grep `PEXELS-PLACEHOLDER` for inline markers).
+
+The **MediaPicker** used in entity forms can both pick an existing asset **and upload a
+new one inline** (v1.0), auto-selecting it — no trip to the media library needed.
 
 ---
 
@@ -240,20 +287,30 @@ real photos replace them; grep `PEXELS-PLACEHOLDER` for inline markers).
 pnpm install
 cp .env.example .env.local        # then fill in the values below
 
-# minimum to boot: DATABASE_URL, AUTH_SECRET, ADMIN_BASE_PATH, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
+# minimum to boot: DATABASE_URL, DIRECT_URL, AUTH_SECRET, ADMIN_BASE_PATH, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
 npx auth secret                   # generates AUTH_SECRET
 
-pnpm prisma migrate dev           # create tables
+pnpm prisma:migrate               # create tables  (NOT `prisma migrate` — see note)
 pnpm db:seed                      # sections + admin user + settings singleton
 
-pnpm dev                          # http://localhost:3000  (admin at /{ADMIN_BASE_PATH})
+pnpm dev                          # http://localhost:3000  (admin at /{ADMIN_BASE_PATH})  — Turbopack
 ```
+
+> **Use the `pnpm prisma:*` scripts, not bare `prisma`.** The Prisma CLI reads `.env`,
+> but this project keeps everything in `.env.local` (Next.js convention). The scripts
+> (`prisma:migrate`, `db:seed`, `prisma:studio`) are wrapped in `dotenv -e .env.local`
+> so Prisma sees `DATABASE_URL` / `DIRECT_URL`. Running `prisma migrate` directly fails
+> with `Environment variable not found: DIRECT_URL`.
+
+> **Neon connection strings:** strip `&channel_binding=require` from both URLs — Prisma's
+> engine doesn't support it and reports a misleading `P1001: Can't reach database server`.
+> `sslmode=require` still enforces TLS.
 
 The site boots and renders (empty states everywhere) even before R2/Pexels/Turnstile/
 SMTP keys are set — each integration degrades gracefully until configured.
 
-**Scripts:** `pnpm dev | build | start | lint | typecheck | format | db:seed |
-prisma:studio`.
+**Scripts:** `pnpm dev | build | start | lint | typecheck | format | prisma:migrate |
+db:seed | prisma:studio`.
 
 ---
 
@@ -263,12 +320,15 @@ Log in at `https://yourdomain.com/{your-admin-path}`. In the dashboard:
 
 - **Projets / Services / Clients / Expertise / Offres / Témoignages** — "+ Ajouter" to
   create, pencil to edit, eye to show/hide, arrows to reorder, trash to delete. "Mis en
-  avant" controls whether a project/service appears in the homepage teaser.
-- **Médias** — upload images (alt text required) or attach Pexels placeholders; pick them
-  in each record's image field.
+  avant" controls whether a project/service appears in the homepage teaser. Long
+  descriptions use a formatting toolbar (bold / italic / lists / links); tags are typed
+  as chips; a project's category is a combobox (reuse an existing one or type a new one).
+- **Médias** — upload images (alt text required) or add a curated Pexels placeholder; in
+  any form you can also upload a new image directly from the picker.
 - **Messages** — contact-form submissions; expand to read, reply by email, mark read,
   delete. New messages also email `NOTIFY_EMAIL_TO`.
-- **Sections** — reorder / hide homepage sections. Changes are live immediately.
+- **Sections** — drag (or use the arrows) to reorder, eye to hide. Changes are live
+  immediately.
 - **Réglages** — SEO defaults, contact email/phone, social links, analytics id.
 
 Nothing here requires a developer or a redeploy.
@@ -336,9 +396,10 @@ CI (`.github/workflows/ci.yml`) runs lint · typecheck · build · `pnpm audit` 
   block, this copy is kept as clearly-marked editable constants seeded from the original.
   To make it dashboard-editable later, promote it into `SiteSettings` JSON + a small form
   (wiring point: `getSiteSettings()`). Marked `TODO(decision)`; noted in `MEDIA_TODO.md`.
-- **Arrays as delimited text in forms** (tags = comma-separated, deliverables/results =
-  one per line) — keeps every admin form a plain, robust HTML `<form>` posting to a
-  Server Action, with almost no client JS, instead of bespoke tag-editor widgets.
+- **Arrays still travel as delimited text over the wire** — the chip/textarea widgets
+  emit comma- or newline-joined strings so every admin form stays a plain HTML `<form>`
+  posting to a Server Action; `parseList` normalises them server-side. The v1.0 chip UI
+  is a thin client layer over that same format.
 - **Generic list actions** (`(dashboard)/actions.ts`) — one delete/toggle-visibility/
   reorder implementation shared by all six entities via a typed model switch, instead of
   6× duplication. Create/update stay per-entity (their fields differ).
@@ -346,6 +407,23 @@ CI (`.github/workflows/ci.yml`) runs lint · typecheck · build · `pnpm audit` 
   infrastructure; `LoginAttempt` is enough and doubles as an audit log.
 - **Drawer over detail routes** — matches the brief and keeps scroll position; the URL
   query param gives shareability without a route per project.
+
+**v1.0 decisions**
+
+- **Rich text = sanitize on write.** Tiptap emits HTML; the server action sanitizes it
+  (`sanitize-html`, text-formatting tags only) before storing, so the DB only ever holds
+  safe markup and both server and client render paths can trust it — no client-side
+  sanitiser, no re-sanitising on every read.
+- **Pexels API dropped** in favour of a curated static URL list. The client didn't want
+  API integration; a small verified list needs no key, no rate limits, and no network
+  call, and still covers placeholders + the login backdrop.
+- **Dashboard chart palette from the dataviz skill.** An internal admin surface, so it
+  uses the skill's _validated_ categorical reference (my first hand-picked teal palette
+  failed the CVD/chroma checks) rather than a bespoke brand ramp; the public site keeps
+  brand teal.
+- **Cold-start retry over a persistent connection.** A short `withRetry` is simpler and
+  cheaper than adding the Neon serverless driver/adapter, and makes the free-tier
+  suspend invisible.
 
 ---
 
@@ -356,15 +434,19 @@ Honest list of what a follow-up phase should add:
 - **Admin "change password" screen** (currently via seed/env — see §11).
 - **Project gallery editing UI** — the schema + drawer support a multi-image gallery, but
   the admin form currently sets only the cover image; multi-select is the next step.
-- **Hero/About content editing** — see the `static-copy.ts` decision above.
-- **Drag-and-drop reordering** — reordering works via up/down arrows; DnD is a polish
-  item.
+- **Hero/About content editing** — see the `static-copy.ts` decision above. (The v1.0
+  hero also uses the logo as a stand-in portrait — marked `PEXELS-PLACEHOLDER` in
+  `hero.tsx` — swap in a real headshot.)
 - **On-demand revalidation granularity** — writes call `revalidatePath` broadly; could be
   narrowed with tags.
 - **Analytics provider** — `Analytics` assumes a Plausible-style script and is off by
   default; confirm the provider and widen the CSP accordingly (marked `TODO(decision)`).
 - **Lighthouse pass** — structure targets ≥90/95/95; run a real audit against production
-  data and close any contrast/keyboard gaps.
+  data and close any contrast/keyboard gaps. (The dashboard charts should also get a
+  visual eyeball — they render behind the login.)
+
+_Done in v1.0 (previously on this list): drag-and-drop section reordering; the dashboard
+is no longer just stat cards (charts added)._
 
 ---
 
@@ -380,19 +462,56 @@ src/
     robots.ts · sitemap.ts
     dev/style-guide/        dev-only style guide (404 in prod)
   components/
-    ui/                     Button, Eyebrow, StatBlock, SkillBar, Drawer, EmptyState, …
-    layout/                 Nav (scrollspy), Footer
-    sections/               Hero, About, teasers, Clients, Expertise, Offers, …
-    cards/ · drawer/ · listing/ · admin/ · seo/
-  content/static-copy.ts    hero/about prose (see §13)
-  lib/                      prisma · auth(.config) · content · env · r2 · pexels ·
-                            image · email · ratelimit · turnstile · password · slug ·
-                            admin · validation/*
-  styles/globals.css        tokens + component utilities
+    ui/                     Button, Eyebrow, StatBlock, SkillBar, Drawer, EmptyState,
+                            Icon, HelpTip, Combobox, ChipsInput, RichTextEditor, RichText …
+    layout/                 Nav (scrollspy + mobile drawer), Footer
+    sections/               Hero (interactive), About (sticky), teasers, Clients,
+                            Expertise, Approach, Offers (tabs), Testimonials, Contact
+    cards/ · drawer/ · listing/ · seo/
+    admin/                  AdminNav, AdminMobileBar, forms/*, MediaPicker, ResourceList,
+                            SectionOrderList (drag), MessageList, DashboardCharts …
+  content/static-copy.ts    hero/about prose + section copy (see §13)
+  app/icon.svg              favicon (brand mark)
+  lib/                      prisma · auth(.config) · content · db-retry · env · r2 ·
+                            pexels-curated · image · html (sanitize) · email · ratelimit ·
+                            turnstile · password · slug · admin · categories ·
+                            dashboard-stats · validation/*
+  styles/globals.css        tokens + component utilities + .prose-vd (rich text)
   middleware.ts             edge auth gate for the admin area
 design/                     original portfolio_vdigital_FINAL.html (reference)
 MEDIA_TODO.md               placeholder tracker (deliverable)
 ```
+
+---
+
+## 16. v1.0 change summary
+
+Shipped on top of the initial rebuild (three commits on `egbe`):
+
+**Fixes & performance**
+
+- Neon cold-start retry (`db-retry.ts`) — kills the recurring `P1001` / `Connection
+closed` errors.
+- Turbopack dev bundler — much faster on-demand compiles.
+
+**Public site**
+
+- Favicon; all emoji replaced with lucide icons.
+- Interactive hero (polaroid + cursor-reactive background); sticky About sidebar.
+- Full-screen mobile nav drawer with scroll lock; tablet padding step.
+
+**Dashboard**
+
+- Grouped nav; red required `*`; auto-grow textareas; help tooltips.
+- GitHub-style tag chips; category combobox; expertise range slider.
+- Inline image upload from the MediaPicker; drag-to-reorder sections.
+- Full-screen mobile drawer (sidebar on `lg+`).
+- WYSIWYG (Tiptap) for long fields, sanitized on write.
+- Chart.js overview (doughnut / line / bar / recent-messages) in a bento grid.
+
+**Pexels**
+
+- API removed; curated verified free URLs; random login-page backdrop.
 
 ---
 
