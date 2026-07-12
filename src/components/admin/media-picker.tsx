@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { ImageIcon, X, UploadCloud } from 'lucide-react';
 import type { MediaAsset } from '@prisma/client';
@@ -24,10 +25,14 @@ export function MediaPicker({
 }) {
   const [selected, setSelected] = useState<MediaAsset | null>(defaultAsset ?? null);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Portal target only exists on the client.
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open || assets.length) return;
@@ -98,82 +103,85 @@ export function MediaPicker({
         </div>
       </div>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[300] flex items-center justify-center bg-ink/40 p-4"
-          onClick={() => setOpen(false)}
-        >
+      {open &&
+        mounted &&
+        createPortal(
           <div
-            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-surface-white p-6"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-ink/40 p-4"
+            onClick={() => setOpen(false)}
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-display text-[1.05rem] font-bold text-ink">Médiathèque</h3>
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Fermer"
-                className="text-ink-muted hover:text-teal"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Inline upload — add a new image without leaving the form */}
-            <form
-              onSubmit={onUpload}
-              className="mb-5 rounded-md border border-dashed border-line bg-surface-off p-4"
+            <div
+              className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-surface-white p-6"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-2 flex items-center gap-2 text-[0.8rem] font-medium text-ink">
-                <UploadCloud className="h-4 w-4 text-teal" /> Téléverser une nouvelle image
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-display text-[1.05rem] font-bold text-ink">Médiathèque</h3>
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Fermer"
+                  className="text-ink-muted hover:text-teal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                <Field label="Fichier" htmlFor="mp-file" required>
-                  <Input id="mp-file" name="file" type="file" accept="image/*" required />
-                </Field>
-                <Field label="Texte alternatif" htmlFor="mp-alt" required>
-                  <Input id="mp-alt" name="altText" placeholder="Description" required />
-                </Field>
-                <Button type="submit" variant="primary" size="sm" disabled={uploading}>
-                  {uploading ? '…' : 'Téléverser'}
-                </Button>
-              </div>
-              {uploadError && <p className="mt-2 text-[0.75rem] text-red-600">{uploadError}</p>}
-            </form>
 
-            {loading ? (
-              <p className="py-8 text-center text-[0.83rem] text-ink-muted">Chargement…</p>
-            ) : assets.length === 0 ? (
-              <p className="py-8 text-center text-[0.83rem] text-ink-muted">
-                Aucun média pour l&apos;instant — téléversez-en un ci-dessus.
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {assets.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => {
-                      setSelected(a);
-                      setOpen(false);
-                    }}
-                    className={`relative aspect-square overflow-hidden rounded border ${
-                      selected?.id === a.id ? 'border-teal ring-2 ring-teal' : 'border-line'
-                    }`}
-                  >
-                    <Image
-                      src={a.url}
-                      alt={a.altText ?? ''}
-                      fill
-                      sizes="160px"
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              {/* Inline upload — add a new image without leaving the form */}
+              <form
+                onSubmit={onUpload}
+                className="mb-5 rounded-md border border-dashed border-line bg-surface-off p-4"
+              >
+                <div className="mb-2 flex items-center gap-2 text-[0.8rem] font-medium text-ink">
+                  <UploadCloud className="h-4 w-4 text-teal" /> Téléverser une nouvelle image
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                  <Field label="Fichier" htmlFor="mp-file" required>
+                    <Input id="mp-file" name="file" type="file" accept="image/*" required />
+                  </Field>
+                  <Field label="Texte alternatif" htmlFor="mp-alt" required>
+                    <Input id="mp-alt" name="altText" placeholder="Description" required />
+                  </Field>
+                  <Button type="submit" variant="primary" size="sm" disabled={uploading}>
+                    {uploading ? '…' : 'Téléverser'}
+                  </Button>
+                </div>
+                {uploadError && <p className="mt-2 text-[0.75rem] text-red-600">{uploadError}</p>}
+              </form>
+
+              {loading ? (
+                <p className="py-8 text-center text-[0.83rem] text-ink-muted">Chargement…</p>
+              ) : assets.length === 0 ? (
+                <p className="py-8 text-center text-[0.83rem] text-ink-muted">
+                  Aucun média pour l&apos;instant — téléversez-en un ci-dessus.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                  {assets.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setSelected(a);
+                        setOpen(false);
+                      }}
+                      className={`relative aspect-square overflow-hidden rounded border ${
+                        selected?.id === a.id ? 'border-teal ring-2 ring-teal' : 'border-line'
+                      }`}
+                    >
+                      <Image
+                        src={a.url}
+                        alt={a.altText ?? ''}
+                        fill
+                        sizes="160px"
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
