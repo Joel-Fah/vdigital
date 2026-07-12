@@ -26,7 +26,7 @@ and — just as importantly — **why** each decision was made.
 13. [Design decisions & trade-offs](#13-design-decisions--trade-offs)
 14. [Known gaps & roadmap](#14-known-gaps--roadmap)
 15. [Project structure](#15-project-structure)
-16. [v1.0 change summary](#16-v10-change-summary)
+16. [Version history](#16-version-history)
 
 ---
 
@@ -46,13 +46,16 @@ obscured, authenticated path sits a dashboard with full CRUD over every content 
 a media library (uploads + Pexels placeholders), a contact-message inbox, site settings,
 homepage section ordering, and an at-a-glance charts overview.
 
-> **v1.0 (current).** On top of the initial rebuild this release adds: an interactive
-> hero (polaroid portrait + cursor-reactive background), a sticky About sidebar, an
-> all-icons (no-emoji) treatment, full mobile drawers for both the public nav and the
-> dashboard, a WYSIWYG editor for long text, GitHub-style tag chips, a category
-> combobox, in-form image upload, drag-to-reorder sections, a Chart.js dashboard, a
-> Neon cold-start retry, Turbopack dev, and a curated (API-free) Pexels flow. The full
-> list is in [§16](#16-v10-change-summary).
+> **v1.2 (current).** The site has iterated through three releases on top of the initial
+> rebuild. Highlights: an interactive hero + sticky About; an all-icons (no-emoji)
+> treatment; full mobile drawers; a WYSIWYG editor, tag chips, category **and client**
+> comboboxes, in-form image upload, drag-to-reorder; a Chart.js dashboard with a
+> **prioritised activity-insights** engine; a curated (API-free) Pexels flow; structured
+> **offer duration/price**; an inline **request-a-quote** flow in the offer/service
+> drawers; predefined **contact subjects** + WhatsApp; **masonry testimonials** with a
+> featured set + side-panel; a secure **forgot-password** flow; a client-level Neon
+> cold-start retry; and Turbopack dev. Full per-release history in
+> [§16](#16-version-history).
 
 ---
 
@@ -118,11 +121,13 @@ try/catch with an empty fallback, so a missing or unreachable database degrades 
 designed empty states rather than a 500 — important on first deploy, before the DB is
 migrated/seeded.
 
-**Cold-start resilience** (`src/lib/db-retry.ts`). Neon's free tier scales the compute
-to zero after a few minutes idle; the first query after that surfaces as `P1001` /
-`Connection closed` before Prisma reconnects. `withRetry()` retries connection-class
-errors with backoff so the wake-up is invisible instead of flashing empty states. It
-wraps the public reads (via `safe`) and the dashboard/stats queries.
+**Cold-start resilience** (`src/lib/db-retry.ts` + `src/lib/prisma.ts`). Neon's free tier
+scales the compute to zero after a few minutes idle; the first query after that surfaces
+as `P1001` / `Connection closed` before Prisma reconnects. Since **v1.1** the retry lives
+at the **Prisma client level** — a `$allOperations` extension retries connection-class
+errors with backoff (~5.6s) — so _every_ query (public reads, admin list pages, and
+server actions alike) rides out the resume invisibly, not just the ones that were
+explicitly wrapped.
 
 ---
 
@@ -170,15 +175,22 @@ Prisma schema: `prisma/schema.prisma`. Content entities all share `order` + `vis
   Projects hold `resultsJson` (KPI array) and a `gallery` many-to-many with media.
   `Offer.kind` (`diagnostic` | `formation`) selects which tab of the
   "Diagnostics & Formations" section the offer renders in, and switches its card shape.
-  Their long fields (project `summary`, service/offer `description`) store **sanitized
-  rich-text HTML** from the Tiptap editor (see [§6](#6-key-ux-behaviours--how-they-work)).
+  **v1.1** split the offer's free-text duration/price into structured
+  `durationValue`+`durationUnit` (`hour|day|week|month`) and `priceAmount`+`priceCurrency`
+  (`EUR|USD|FCFA`) — see `src/lib/offers.ts`. Their long fields (project `summary`,
+  service/offer `description`) store **sanitized rich-text HTML** from the Tiptap editor
+  (see [§6](#6-key-ux-behaviours--how-they-work)).
 - **`ClientLogo`, `ExpertiseItem`, `Testimonial`** — simpler list entities.
+  `Testimonial.featured` (**v1.2**) marks the ones shown on the homepage (max 6).
 - **`MediaAsset`** — one row per image; `source` is `upload` | `pexels` with
   `pexelsId`/`pexelsCredit` for traceability. Referenced by every content type via named
   relations (with the required back-relation arrays).
-- **`ContactMessage`** — inbox; stores a **hashed** source IP, never the raw IP.
+- **`ContactMessage`** — inbox; stores a **hashed** source IP, never the raw IP, plus an
+  optional `whatsapp` (**v1.2**) and the chosen subject.
 - **`SiteSettings`** — a `singleton` row (SEO defaults, socials, contact, analytics).
 - **`AdminUser`** — single admin; argon2 `passwordHash`.
+- **`PasswordResetToken`** (**v1.2**) — single-use, 1-hour, hashed reset tokens for the
+  forgot-password flow ([§7](#7-security-model)).
 - **`LoginAttempt`** — audit + rate-limit source (login _and_, via a synthetic
   identifier, contact submissions).
 
@@ -222,11 +234,29 @@ Escape, focus-return). Cards are links that set a shallow query param
 (`?project=slug` / `?service=` / `?offer=`); a single `DetailDrawer` mounted in the
 public layout reads the param, fetches `/api/detail`, and renders. The URL is therefore
 **shareable and refresh-proof**, and browser-back closes the drawer. Closing strips the
-param with `router.replace(..., { scroll: false })`, preserving scroll underneath.
+param with `router.replace(..., { scroll: false })`, preserving scroll underneath. The
+same pattern powers the testimonials side-panel (`?temoignages=1`).
 
-**Empty states** — every dynamic list has a designed empty state (`EmptyState`,
-public/admin/chip variants). Testimonials additionally **auto-hide** the whole section
-when empty (an empty social-proof block hurts trust more than omission).
+**Request-a-quote (v1.2)** — the offer/service drawers don't bounce to the contact
+section: a `QuickRequest` component reveals email + WhatsApp inline (focusing the email),
+auto-composes a message with the item as the subject, and posts to `/api/contact`. The
+main contact form has predefined **subjects** + an "Autre" free-text escape, and an
+optional WhatsApp number; the inbox shows both, with a `wa.me` reply link.
+
+**Testimonials (v1.2)** — a **masonry** (CSS columns, ≤3) so uneven card heights pack
+neatly; fixed 40px avatars with centered 2-letter initials; a 360-char cap with a live
+counter in the admin form. The homepage shows up to 6 `featured` (or 6 at random if none
+are marked); "Voir tous les témoignages" opens the side-panel drawer with the full list.
+
+**Dashboard insights (v1.2)** — a small **rule engine** (`src/lib/dashboard-insights.ts`)
+inspects the stats and emits prioritised insights at three levels (high/medium/low) —
+unread messages, empty content, un-featured items, Pexels placeholders to replace, low
+activity. Rendered as an accent-bordered bento above the charts; add a rule and it
+appears, no UI change (scalable by design).
+
+**Empty states** — every dynamic list has a designed (all-French) empty state
+(`EmptyState`, public/admin/chip variants). Testimonials additionally **auto-hide** the
+whole section when empty (an empty social-proof block hurts trust more than omission).
 
 ---
 
@@ -245,6 +275,11 @@ DENY`, `Referrer-Policy`, HSTS, `X-Content-Type-Options`, `Permissions-Policy`. 
   (`@node-rs/argon2`), signed httpOnly session cookies, 8h session. The config is split:
   `auth.config.ts` is edge-safe (used by middleware); `auth.ts` adds the argon2
   provider (Node runtime only).
+- **Forgot password (v1.2)** — `src/lib/password-reset.ts`: a **256-bit** token whose
+  **SHA-256 hash** is stored (never the raw token), **1-hour** TTL, **single-use**. The
+  forgot/reset pages live under the admin path (exempted from the auth gate in
+  middleware) with Turnstile + generic, **enumeration-safe** responses. The link is
+  emailed; when SMTP is unconfigured it's logged to the server console (dev only).
 - **Rate limiting** — DB-backed (`LoginAttempt`): 5 failed logins / 15 min per email or
   IP blocks the 6th; contact form is 5 / hour per IP. All login attempts are logged.
 - **Turnstile** — invisible challenge on **both** the login and contact forms; verified
@@ -320,13 +355,15 @@ Log in at `https://yourdomain.com/{your-admin-path}`. In the dashboard:
 
 - **Projets / Services / Clients / Expertise / Offres / Témoignages** — "+ Ajouter" to
   create, pencil to edit, eye to show/hide, arrows to reorder, trash to delete. "Mis en
-  avant" controls whether a project/service appears in the homepage teaser. Long
-  descriptions use a formatting toolbar (bold / italic / lists / links); tags are typed
-  as chips; a project's category is a combobox (reuse an existing one or type a new one).
+  avant" controls whether a project/service (and, v1.2, a testimonial — max 6) appears on
+  the homepage. Long descriptions use a formatting toolbar (bold / italic / lists /
+  links); tags are typed as chips; a project's **category and client** are comboboxes
+  (reuse an existing value or type a new one). Offers take a structured duration
+  (number + unit) and price (amount + currency).
 - **Médias** — upload images (alt text required) or add a curated Pexels placeholder; in
   any form you can also upload a new image directly from the picker.
-- **Messages** — contact-form submissions; expand to read, reply by email, mark read,
-  delete. New messages also email `NOTIFY_EMAIL_TO`.
+- **Messages** — contact-form submissions (subject + optional WhatsApp); expand to read,
+  reply by email or WhatsApp, mark read, delete. New messages also email `NOTIFY_EMAIL_TO`.
 - **Sections** — drag (or use the arrows) to reorder, eye to hide. Changes are live
   immediately.
 - **Réglages** — SEO defaults, contact email/phone, social links, analytics id.
@@ -339,10 +376,11 @@ Nothing here requires a developer or a redeploy.
 
 - **Path:** change `ADMIN_BASE_PATH` in the host's env vars and redeploy. No code change.
   Avoid dictionary words (`admin`, `login`, `panel`, …); keep it typeable.
-- **Password:** the seed sets the initial password from `ADMIN_INITIAL_PASSWORD`; change
-  it after first login (a "change password" screen is on the roadmap — until then, re-run
-  the seed with a new `ADMIN_INITIAL_PASSWORD` after deleting the `AdminUser` row, or add
-  a one-off script). Never leave the initial password in the env after go-live.
+- **Password:** the seed sets the initial password from `ADMIN_INITIAL_PASSWORD`. To
+  change it, use the **"Mot de passe oublié ?"** link on the login page (v1.2) — it emails
+  a single-use reset link (requires SMTP configured; see [§7](#7-security-model)). Never
+  leave the initial password in the env after go-live. _(An in-session "change password"
+  screen for a logged-in admin is still on the roadmap.)_
 
 ---
 
@@ -421,9 +459,32 @@ CI (`.github/workflows/ci.yml`) runs lint · typecheck · build · `pnpm audit` 
   uses the skill's _validated_ categorical reference (my first hand-picked teal palette
   failed the CVD/chroma checks) rather than a bespoke brand ramp; the public site keeps
   brand teal.
-- **Cold-start retry over a persistent connection.** A short `withRetry` is simpler and
-  cheaper than adding the Neon serverless driver/adapter, and makes the free-tier
-  suspend invisible.
+- **Cold-start retry over a persistent connection.** A short retry is simpler and cheaper
+  than adding the Neon serverless driver/adapter, and makes the free-tier suspend
+  invisible.
+
+**v1.1 decisions**
+
+- **Retry moved to the Prisma client** (`$allOperations` extension) after the per-call
+  wrappers missed the admin list pages — one place now covers every query.
+- **Structured offer duration/price** (int + unit / amount + currency) instead of free
+  text, so cards/drawer format consistently (`FCFA`, `€`, "7 jours") and the data is
+  queryable later.
+- **MediaPicker modal is portaled to `document.body`** — its inline-upload `<form>` was
+  nesting inside the entity `<form>` (invalid HTML / hydration error).
+
+**v1.2 decisions**
+
+- **Forgot-password: hash-on-store, single-use, enumeration-safe.** Only the token hash is
+  persisted; responses are always generic; the reset pages are explicitly exempted from
+  the middleware auth gate. Simple and secure without a full account system.
+- **Quick-request reuses `/api/contact`.** No new endpoint — the drawer composes a message
+  and posts to the same validated, rate-limited, Turnstile-guarded route (schema made
+  name-optional server-side; the route derives a name from the email).
+- **Testimonials masonry via CSS `columns`** (not a JS masonry lib) — zero JS, responsive,
+  and cards use `break-inside-avoid`.
+- **Insights as a rule engine.** Each rule is a pure `stats → Insight | null`; the list is
+  sorted by priority and rendered generically, so new insights are one function.
 
 ---
 
@@ -431,22 +492,25 @@ CI (`.github/workflows/ci.yml`) runs lint · typecheck · build · `pnpm audit` 
 
 Honest list of what a follow-up phase should add:
 
-- **Admin "change password" screen** (currently via seed/env — see §11).
+- **In-session "change password" screen** — a logged-in admin can't yet change their
+  password from the dashboard; recovery goes through the forgot-password email flow (v1.2,
+  §11). Needs SMTP configured to be usable.
 - **Project gallery editing UI** — the schema + drawer support a multi-image gallery, but
   the admin form currently sets only the cover image; multi-select is the next step.
-- **Hero/About content editing** — see the `static-copy.ts` decision above. (The v1.0
-  hero also uses the logo as a stand-in portrait — marked `PEXELS-PLACEHOLDER` in
-  `hero.tsx` — swap in a real headshot.)
+- **Hero/About content editing** — see the `static-copy.ts` decision above. (The hero also
+  uses the logo as a stand-in portrait — marked `PEXELS-PLACEHOLDER` in `hero.tsx` — swap
+  in a real headshot.)
 - **On-demand revalidation granularity** — writes call `revalidatePath` broadly; could be
   narrowed with tags.
 - **Analytics provider** — `Analytics` assumes a Plausible-style script and is off by
   default; confirm the provider and widen the CSP accordingly (marked `TODO(decision)`).
 - **Lighthouse pass** — structure targets ≥90/95/95; run a real audit against production
-  data and close any contrast/keyboard gaps. (The dashboard charts should also get a
-  visual eyeball — they render behind the login.)
+  data and close any contrast/keyboard gaps.
+- **Dev style guide** (`/dev/style-guide`) still has English sample labels — cosmetic, and
+  it 404s in production.
 
-_Done in v1.0 (previously on this list): drag-and-drop section reordering; the dashboard
-is no longer just stat cards (charts added)._
+_Shipped since v1.0 (previously on this list): drag-and-drop section reordering; charts on
+the dashboard; a password-recovery flow._
 
 ---
 
@@ -456,62 +520,76 @@ is no longer just stat cards (charts added)._
 prisma/                     schema.prisma · seed.ts
 src/
   app/
-    (public)/               homepage, /projects, /services  (+ shared Drawer, Analytics)
-    [adminBasePath]/        obscured admin (guarded); (auth) login · (dashboard) CRUD
-    api/                    detail · projects · services · contact · auth · admin/*
+    (public)/               homepage, /projects, /services  (+ Drawer, TestimonialsPanel, Analytics)
+    [adminBasePath]/        obscured admin (guarded); (auth) login · forgot · reset · (dashboard) CRUD
+    api/                    detail · projects · services · testimonials · contact · auth · admin/*
     robots.ts · sitemap.ts
     dev/style-guide/        dev-only style guide (404 in prod)
   components/
     ui/                     Button, Eyebrow, StatBlock, SkillBar, Drawer, EmptyState,
                             Icon, HelpTip, Combobox, ChipsInput, RichTextEditor, RichText …
-    layout/                 Nav (scrollspy + mobile drawer), Footer
+    layout/                 Nav (scrollspy + mobile drawer), Footer (+ Hinkaku credit)
     sections/               Hero (interactive), About (sticky), teasers, Clients,
-                            Expertise, Approach, Offers (tabs), Testimonials, Contact
-    cards/ · drawer/ · listing/ · seo/
-    admin/                  AdminNav, AdminMobileBar, forms/*, MediaPicker, ResourceList,
-                            SectionOrderList (drag), MessageList, DashboardCharts …
+                            Expertise, Approach, Offers (tabs), Testimonials (masonry), Contact
+    cards/ · listing/ · seo/
+    drawer/                 DetailDrawer, {project,service,offer}-drawer-content,
+                            QuickRequest, TestimonialsPanel
+    admin/                  AdminNav (grouped), AdminMobileBar, ScrollArea, forms/*,
+                            MediaPicker, ResourceList, SectionOrderList (drag), MessageList,
+                            DashboardCharts, DashboardInsights …
   content/static-copy.ts    hero/about prose + section copy (see §13)
   app/icon.svg              favicon (brand mark)
-  lib/                      prisma · auth(.config) · content · db-retry · env · r2 ·
-                            pexels-curated · image · html (sanitize) · email · ratelimit ·
-                            turnstile · password · slug · admin · categories ·
-                            dashboard-stats · validation/*
-  styles/globals.css        tokens + component utilities + .prose-vd (rich text)
+  lib/                      prisma (retry ext) · auth(.config) · content · db-retry · env ·
+                            r2 · pexels-curated · image · html (sanitize) · email · offers ·
+                            ratelimit · turnstile · password · password-reset · slug · admin ·
+                            categories · dashboard-stats · dashboard-insights · validation/*
+  styles/globals.css        tokens + utilities + .prose-vd (rich text) + .scroll-fade
   middleware.ts             edge auth gate for the admin area
+public/                     vdigital-logo.jpg · award-medal.jpg · hinkaku-horizontal.svg
 design/                     original portfolio_vdigital_FINAL.html (reference)
 MEDIA_TODO.md               placeholder tracker (deliverable)
 ```
 
 ---
 
-## 16. v1.0 change summary
+## 16. Version history
 
-Shipped on top of the initial rebuild (three commits on `egbe`):
+### v1.0 — polish & dashboard
 
-**Fixes & performance**
+- **Fixes/perf:** Neon cold-start retry; Turbopack dev bundler.
+- **Public:** favicon; all emoji → lucide icons; interactive hero (polaroid +
+  cursor-reactive background); sticky About; full-screen mobile nav drawer with scroll
+  lock.
+- **Dashboard:** grouped nav; red required `*`; auto-grow textareas; help tooltips; tag
+  chips; category combobox; expertise range slider; inline image upload; drag-to-reorder
+  sections; mobile drawer; WYSIWYG (Tiptap, sanitized on write); Chart.js bento overview.
+- **Pexels:** API removed → curated free URLs + random login backdrop.
 
-- Neon cold-start retry (`db-retry.ts`) — kills the recurring `P1001` / `Connection
-closed` errors.
-- Turbopack dev bundler — much faster on-demand compiles.
+### v1.1 — fixes & structured offers
 
-**Public site**
+- **DB dropouts:** retry moved to the Prisma **client level** (`$allOperations`) so admin
+  list pages are covered too; longer backoff.
+- **MediaPicker:** portal the modal to `document.body` — fixes the nested-`<form>`
+  hydration error on the inline upload.
+- **Offers:** duration → `durationValue` + `durationUnit`; price → `priceAmount` +
+  `priceCurrency` (EUR/USD/FCFA), with select widgets; shared formatting in `lib/offers.ts`.
+  Dropped the unused emoji `icon` column.
 
-- Favicon; all emoji replaced with lucide icons.
-- Interactive hero (polaroid + cursor-reactive background); sticky About sidebar.
-- Full-screen mobile nav drawer with scroll lock; tablet padding step.
+### v1.2 — requests, testimonials, recovery, i18n
 
-**Dashboard**
-
-- Grouped nav; red required `*`; auto-grow textareas; help tooltips.
-- GitHub-style tag chips; category combobox; expertise range slider.
-- Inline image upload from the MediaPicker; drag-to-reorder sections.
-- Full-screen mobile drawer (sidebar on `lg+`).
-- WYSIWYG (Tiptap) for long fields, sanitized on write.
-- Chart.js overview (doughnut / line / bar / recent-messages) in a bento grid.
-
-**Pexels**
-
-- API removed; curated verified free URLs; random login-page backdrop.
+- **Public:** inline request-a-quote in the offer/service drawers (email + WhatsApp);
+  contact form with predefined subjects + "Autre" and optional WhatsApp; navbar switches
+  to the drawer at `<lg` (tablet fix); client-card initials-avatar fallback; footer
+  "Conçu et développé par Hinkaku Ltd." (bundled SVG → hinkaku.tech); testimonials masonry
+  (≤3 cols) with fixed avatars + 2-letter initials, a 360-char cap, a featured set (max 6,
+  random fallback) and a "voir tous" side-panel.
+- **Dashboard:** sidebar with fixed top/bottom + scrollable middle (fade-in scrollbar) that
+  fits any height; prioritised **activity insights** (3 levels, rule engine); **client**
+  combobox on the project form; WhatsApp shown in the inbox; full French sweep of the
+  remaining UI strings.
+- **Auth:** secure **forgot-password** flow (hashed single-use tokens, emailed link, reset
+  page).
+- **Schema:** `ContactMessage.whatsapp`, `Testimonial.featured`, `PasswordResetToken`.
 
 ---
 
