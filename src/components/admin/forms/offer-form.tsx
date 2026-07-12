@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import type { MediaAsset, Offer } from '@prisma/client';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { DURATION_UNITS, CURRENCIES } from '@/lib/offers';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/offers/actions';
@@ -71,17 +72,62 @@ export function OfferForm({
         >
           <Input id="badge" name="badge" defaultValue={offer?.badge ?? ''} />
         </Field>
-        <Field
-          label={isDiag ? 'Durée' : 'Métadonnées (séparées par des virgules)'}
-          htmlFor="duration"
-          hint={isDiag ? 'Ex : ⏱ 5–7 jours ouvrés' : 'Ex : Présentiel / Distanciel, 2 jours'}
-        >
-          <Input id="duration" name="duration" defaultValue={offer?.duration ?? ''} />
+
+        <Field label="Durée" htmlFor="durationValue" hint="Quantité + unité (optionnel).">
+          <div className="flex gap-2">
+            <Input
+              id="durationValue"
+              name="durationValue"
+              type="number"
+              min={1}
+              step={1}
+              placeholder="Ex : 7"
+              defaultValue={offer?.durationValue ?? ''}
+              className="w-24"
+            />
+            <Select
+              name="durationUnit"
+              defaultValue={offer?.durationUnit ?? ''}
+              aria-label="Unité de durée"
+              className="flex-1"
+            >
+              <option value="">Unité…</option>
+              {DURATION_UNITS.map((u) => (
+                <option key={u.value} value={u.value}>
+                  {u.label}
+                </option>
+              ))}
+            </Select>
+          </div>
         </Field>
       </div>
 
-      <Field label="Note de prix" htmlFor="priceNote" hint="Ex : À partir de 500€">
-        <Input id="priceNote" name="priceNote" defaultValue={offer?.priceNote ?? ''} />
+      <Field label="Prix" htmlFor="priceAmount" hint="Montant + devise (optionnel).">
+        <div className="flex gap-2">
+          <Input
+            id="priceAmount"
+            name="priceAmount"
+            type="number"
+            min={0}
+            step={1}
+            placeholder="Ex : 500"
+            defaultValue={offer?.priceAmount ?? ''}
+            className="w-40"
+          />
+          <Select
+            name="priceCurrency"
+            defaultValue={offer?.priceCurrency ?? ''}
+            aria-label="Devise"
+            className="w-32"
+          >
+            <option value="">Devise…</option>
+            {CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.value}
+              </option>
+            ))}
+          </Select>
+        </div>
       </Field>
 
       <MediaPicker name="imageId" label="Image (optionnelle)" defaultAsset={imageAsset} />

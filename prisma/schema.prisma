@@ -101,12 +101,13 @@ model Offer {
   deliverables String[] @default([])
   /// Diagnostics: corner badge ("Individuel"). Formations: level ("Débutant → Intermédiaire").
   badge String?
-  /// Diagnostics: "⏱ 5–7 jours ouvrés". Formations: rendered as meta tags (comma-separated).
-  duration String?
-  /// Single emoji shown above the title, as in the original markup.
-  icon        String?
-  priceNote   String?
-  imageId     String?
+  /// Duration, split into a positive integer + unit ("hour" | "day" | "week" | "month").
+  durationValue Int?
+  durationUnit  String?
+  /// Price, split into an integer amount + currency ("EUR" | "USD" | "FCFA").
+  priceAmount   Int?
+  priceCurrency String?
+  imageId       String?
   image       MediaAsset? @relation("OfferImage", fields: [imageId], references: [id], onDelete: SetNull)
   order       Int
   visible     Boolean     @default(true)
