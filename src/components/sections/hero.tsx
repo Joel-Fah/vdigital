@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { HERO, LOGO_SRC } from '@/content/static-copy';
+import { HERO, LOGO_SRC, PROFILE_PIC } from '@/content/static-copy';
 import { Icon } from '@/components/ui/icon';
 
 /**
@@ -116,12 +116,12 @@ export function Hero() {
           >
             <div className="relative h-56 w-56 overflow-hidden bg-teal-ultra sm:h-64 sm:w-64">
               <Image
-                src={LOGO_SRC}
+                src={PROFILE_PIC}
                 alt="Vitus Ahanda"
                 fill
                 sizes="256px"
                 priority
-                className="object-cover"
+                className="object-cover object-top"
               />
             </div>
             <p className="absolute bottom-3 left-0 right-0 text-center font-display text-[0.95rem] font-bold text-ink">
