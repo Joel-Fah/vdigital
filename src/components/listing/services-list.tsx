@@ -28,7 +28,7 @@ export function ServicesList({
     return (
       <EmptyState
         icon={<PenTool className="h-8 w-8" strokeWidth={1.25} />}
-        message="No services published yet. New offerings will appear here as soon as they're ready."
+        message="Aucun service publié pour le moment. Les nouvelles prestations apparaîtront ici dès qu’elles seront prêtes."
       />
     );
   }

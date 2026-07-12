@@ -1,12 +1,19 @@
 'use client';
 
 import { useActionState, useState } from 'react';
+import Link from 'next/link';
 import { Field, Input } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Turnstile } from '@/components/ui/turnstile';
 import { loginAction, type LoginState } from './actions';
 
-export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
+export function LoginForm({
+  turnstileSiteKey,
+  forgotHref,
+}: {
+  turnstileSiteKey?: string;
+  forgotHref: string;
+}) {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(loginAction, {});
   const [token, setToken] = useState('');
 
@@ -35,6 +42,13 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
       <Button type="submit" variant="primary" className="w-full" disabled={pending}>
         {pending ? 'Connexion…' : 'Se connecter'}
       </Button>
+
+      <Link
+        href={forgotHref}
+        className="block text-center text-[0.78rem] text-ink-muted hover:text-teal"
+      >
+        Mot de passe oublié ?
+      </Link>
     </form>
   );
 }

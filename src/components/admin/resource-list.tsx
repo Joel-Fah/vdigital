@@ -40,7 +40,7 @@ export function ResourceList({
     return (
       <EmptyState
         variant="admin"
-        message="Nothing here yet — click '+ Ajouter' to create the first one."
+        message="Rien ici pour le moment — cliquez sur « + Ajouter » pour créer le premier."
         action={
           <Link href={addHref} className="text-[0.8rem] font-medium text-teal hover:underline">
             + Ajouter

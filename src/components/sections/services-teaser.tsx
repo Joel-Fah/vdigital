@@ -28,7 +28,7 @@ export function ServicesTeaser({ services }: { services: ServiceWithIcon[] }) {
       {services.length === 0 ? (
         <EmptyState
           icon={<PenTool className="h-8 w-8" strokeWidth={1.25} />}
-          message="Services are being finalised — check back shortly."
+          message="Les services sont en cours de finalisation — revenez bientôt."
         />
       ) : (
         <>

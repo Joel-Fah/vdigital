@@ -18,12 +18,14 @@ export function ProjectForm({
   project,
   coverAsset,
   categories = [],
+  clients = [],
 }: {
   action: (state: FormResult, formData: FormData) => Promise<FormResult>;
   cancelHref: string;
   project?: Project | null;
   coverAsset?: MediaAsset | null;
   categories?: string[];
+  clients?: string[];
 }) {
   const [state, formAction] = useActionState<FormResult, FormData>(action, {});
   const results = (project?.resultsJson as Result[] | null) ?? [];
@@ -40,8 +42,18 @@ export function ProjectForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Client" htmlFor="client">
-          <Input id="client" name="client" defaultValue={project?.client ?? ''} />
+        <Field
+          label="Client"
+          htmlFor="client"
+          hint="Choisissez un client existant ou saisissez-en un nouveau."
+        >
+          <Combobox
+            id="client"
+            name="client"
+            options={clients}
+            defaultValue={project?.client ?? ''}
+            placeholder="ex : BAO Supermarché"
+          />
         </Field>
         <Field
           label="Catégorie"

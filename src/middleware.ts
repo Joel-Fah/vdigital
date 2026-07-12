@@ -20,9 +20,11 @@ export default auth((req) => {
   const isLoggedIn = Boolean(req.auth?.user);
 
   const isLoginPage = pathname === `/${ADMIN}` || pathname === `/${ADMIN}/`;
-  const isAdminArea = pathname.startsWith(`/${ADMIN}/`) && !isLoginPage;
+  // Public auth pages (must be reachable while logged out).
+  const isPublicAuth = pathname === `/${ADMIN}/forgot` || pathname === `/${ADMIN}/reset`;
+  const isAdminArea = pathname.startsWith(`/${ADMIN}/`) && !isLoginPage && !isPublicAuth;
 
-  if (isLoginPage && isLoggedIn) {
+  if ((isLoginPage || isPublicAuth) && isLoggedIn) {
     return NextResponse.redirect(new URL(`/${ADMIN}/dashboard`, req.nextUrl));
   }
 

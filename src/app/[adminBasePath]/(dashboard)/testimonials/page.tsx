@@ -11,7 +11,7 @@ export default async function AdminTestimonialsPage() {
     <div>
       <AdminHeader
         title="Témoignages"
-        subtitle="La section se masque automatiquement s'il n'y en a aucun."
+        subtitle="Jusqu'à 6 témoignages « mis en avant » s'affichent sur l'accueil ; les autres dans le panneau latéral. Sans sélection, 6 sont choisis au hasard."
         addHref={adminPath('testimonials/new')}
       />
       <ResourceList
@@ -21,7 +21,9 @@ export default async function AdminTestimonialsPage() {
         rows={items.map((t) => ({
           id: t.id,
           primary: t.author,
-          secondary: [t.role, t.company].filter(Boolean).join(' · ') || undefined,
+          secondary:
+            [t.featured ? 'Mis en avant' : null, t.role, t.company].filter(Boolean).join(' · ') ||
+            undefined,
           visible: t.visible,
         }))}
       />

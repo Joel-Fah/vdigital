@@ -20,7 +20,7 @@ export function MessageList({ messages }: { messages: ContactMessage[] }) {
       <EmptyState
         variant="admin"
         icon={<Mail className="h-8 w-8" strokeWidth={1.25} />}
-        message="No messages yet. When someone submits the contact form, it'll show up here."
+        message="Aucun message pour le moment. Les envois du formulaire de contact apparaîtront ici."
       />
     );
   }
@@ -75,16 +75,31 @@ export function MessageList({ messages }: { messages: ContactMessage[] }) {
               </div>
               {open && (
                 <div className="border-t border-line-soft px-4 py-4">
+                  {m.whatsapp && (
+                    <p className="mb-2 text-[0.78rem] text-ink-muted">
+                      WhatsApp : <span className="text-ink">{m.whatsapp}</span>
+                    </p>
+                  )}
                   <p className="whitespace-pre-line text-[0.85rem] leading-relaxed text-ink-mid">
                     {m.message}
                   </p>
-                  <div className="mt-3 flex items-center gap-4">
+                  <div className="mt-3 flex flex-wrap items-center gap-4">
                     <a
                       href={`mailto:${m.email}`}
                       className="text-[0.78rem] text-teal hover:underline"
                     >
                       Répondre par email
                     </a>
+                    {m.whatsapp && (
+                      <a
+                        href={`https://wa.me/${m.whatsapp.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[0.78rem] text-teal hover:underline"
+                      >
+                        Répondre sur WhatsApp
+                      </a>
+                    )}
                     <button
                       onClick={() =>
                         start(() => setMessageReadAction(m.id, !m.read).then(() => {}))

@@ -79,7 +79,7 @@ export function Nav({ sections }: { sections: SectionMap }) {
           </span>
         </Link>
 
-        <div className="hidden gap-10 md:flex">
+        <div className="hidden gap-8 lg:flex xl:gap-10">
           {links.map((l) => (
             <a
               key={l.key}
@@ -102,7 +102,7 @@ export function Nav({ sections }: { sections: SectionMap }) {
             Me contacter
           </a>
           <button
-            className="relative z-[130] rounded p-1.5 text-ink transition-colors hover:text-teal md:hidden"
+            className="relative z-[130] rounded p-1.5 text-ink transition-colors hover:text-teal lg:hidden"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={mobileOpen}
@@ -116,7 +116,7 @@ export function Nav({ sections }: { sections: SectionMap }) {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            className="fixed inset-0 z-[120] flex flex-col bg-surface-white md:hidden"
+            className="fixed inset-0 z-[120] flex flex-col bg-surface-white lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

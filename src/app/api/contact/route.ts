@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { contactSchema } from '@/lib/validation/contact';
+import { contactApiSchema } from '@/lib/validation/contact';
 import { prisma } from '@/lib/prisma';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { clientIp, hashIdentifier, isContactBlocked, recordContactAttempt } from '@/lib/ratelimit';
@@ -22,14 +22,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 });
   }
 
-  const parsed = contactSchema.safeParse(body);
+  const parsed = contactApiSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'Merci de vérifier les champs du formulaire.' },
       { status: 400 },
     );
   }
-  const { name, email, subject, message, turnstileToken, company } = parsed.data;
+  const { email, whatsapp, subject, message, turnstileToken, company } = parsed.data;
+  // Quick-request flow may omit the name — derive a usable one from the email.
+  const name = parsed.data.name?.trim() || email.split('@')[0] || 'Visiteur';
 
   // Honeypot: bots fill hidden fields. Pretend success, store nothing.
   if (company) return NextResponse.json({ ok: true });
@@ -47,11 +49,18 @@ export async function POST(req: NextRequest) {
 
   try {
     await prisma.contactMessage.create({
-      data: { name, email, subject: subject || null, message, ipHash: hashIdentifier(ip) },
+      data: {
+        name,
+        email,
+        whatsapp: whatsapp || null,
+        subject: subject || null,
+        message,
+        ipHash: hashIdentifier(ip),
+      },
     });
     await recordContactAttempt(ip);
     // Email is best-effort — a delivery failure must not fail the submission.
-    await sendContactNotification({ name, email, subject, message }).catch((e) =>
+    await sendContactNotification({ name, email, whatsapp, subject, message }).catch((e) =>
       console.error('[contact] email failed:', e),
     );
   } catch (err) {

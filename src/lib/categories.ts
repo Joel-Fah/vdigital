@@ -15,3 +15,18 @@ export async function getProjectCategories(): Promise<string[]> {
     return [];
   }
 }
+
+/** Distinct, non-empty project clients — powers the client combobox. */
+export async function getProjectClients(): Promise<string[]> {
+  try {
+    const rows = await prisma.project.findMany({
+      where: { client: { not: null } },
+      select: { client: true },
+      distinct: ['client'],
+      orderBy: { client: 'asc' },
+    });
+    return rows.map((r) => r.client!).filter(Boolean);
+  } catch {
+    return [];
+  }
+}

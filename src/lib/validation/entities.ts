@@ -110,12 +110,20 @@ export const offerSchema = z.object({
   order: z.coerce.number().int().default(0),
 });
 
+/** Reasonable testimonial length so cards don't blow out the masonry layout. */
+export const TESTIMONIAL_MAX = 360;
+
 export const testimonialSchema = z.object({
-  author: z.string().trim().min(2, 'Auteur requis').max(160),
-  role: optionalText(120),
-  company: optionalText(120),
-  quote: z.string().trim().min(10, 'Citation trop courte').max(2000),
+  author: z.string().trim().min(2, 'Auteur requis').max(120),
+  role: optionalText(80),
+  company: optionalText(80),
+  quote: z
+    .string()
+    .trim()
+    .min(10, 'Citation trop courte')
+    .max(TESTIMONIAL_MAX, `Citation trop longue (${TESTIMONIAL_MAX} caractères max.)`),
   photoId: optionalText(60),
+  featured: z.boolean().default(false),
   visible: z.boolean().default(true),
   order: z.coerce.number().int().default(0),
 });

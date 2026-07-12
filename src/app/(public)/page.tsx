@@ -6,7 +6,7 @@ import {
   getClients,
   getExpertise,
   getOffers,
-  getTestimonials,
+  getHomeTestimonials,
   getSiteSettings,
 } from '@/lib/content';
 import { Hero } from '@/components/sections/hero';
@@ -40,7 +40,7 @@ export default async function HomePage() {
       getClients(),
       getExpertise(),
       getOffers(),
-      getTestimonials(),
+      getHomeTestimonials(),
       getSiteSettings(),
     ]);
 
@@ -54,7 +54,13 @@ export default async function HomePage() {
     expertise: <ExpertiseSection key="expertise" items={expertise} />,
     approach: <ApproachSection key="approach" />,
     offers: <OffersSection key="offers" offers={offers} />,
-    testimonials: <TestimonialsSection key="testimonials" testimonials={testimonials} />,
+    testimonials: (
+      <TestimonialsSection
+        key="testimonials"
+        testimonials={testimonials.items}
+        total={testimonials.total}
+      />
+    ),
     contact: (
       <ContactSection key="contact" settings={settings} turnstileSiteKey={env.turnstile.siteKey} />
     ),
