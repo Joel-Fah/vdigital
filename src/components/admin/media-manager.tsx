@@ -94,7 +94,7 @@ export function MediaManager({
         <EmptyState
           variant="admin"
           icon={<UploadCloud className="h-8 w-8" strokeWidth={1.25} />}
-          message="No media uploaded yet. Drag and drop images here, or search Pexels for a placeholder."
+          message="Aucun média pour le moment. Téléversez une image, ou ajoutez un visuel Pexels."
         />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

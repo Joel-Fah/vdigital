@@ -1,8 +1,8 @@
-import { ExternalLink, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type { MediaAsset, Service } from '@prisma/client';
 import { TagPill } from '@/components/ui/tag-pill';
-import { Button } from '@/components/ui/button';
 import { RichText } from '@/components/ui/rich-text';
+import { QuickRequest } from '@/components/drawer/quick-request';
 
 type ServiceDetail = Service & { icon: MediaAsset | null };
 
@@ -29,9 +29,7 @@ export function ServiceDrawerContent({ data }: { data: unknown }) {
         </div>
       )}
 
-      <Button href="/#contact" variant="primary" size="sm">
-        Discuter de ce service <ExternalLink className="h-3.5 w-3.5" />
-      </Button>
+      <QuickRequest itemLabel={service.title} kind="service" label="Discuter de ce service" />
     </div>
   );
 }

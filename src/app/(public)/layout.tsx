@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Nav } from '@/components/layout/nav';
 import { Footer } from '@/components/layout/footer';
 import { DetailDrawer } from '@/components/drawer/detail-drawer';
+import { TestimonialsPanel } from '@/components/drawer/testimonials-panel';
 import { Analytics } from '@/components/analytics';
 import { getSections, getSiteSettings } from '@/lib/content';
 
@@ -21,6 +22,9 @@ export default async function PublicLayout({ children }: { children: React.React
           Suspense boundary is required because it reads useSearchParams. */}
       <Suspense fallback={null}>
         <DetailDrawer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <TestimonialsPanel />
       </Suspense>
       <Analytics />
     </>

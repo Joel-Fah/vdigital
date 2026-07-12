@@ -118,7 +118,42 @@ export function getOffers() {
   );
 }
 
-export function getTestimonials() {
+const TESTIMONIALS_HOME = 6;
+
+/**
+ * Homepage testimonials (Section 3.1 / v1.2): up to 6 `featured` ones (by order);
+ * if none are featured, 6 chosen at random. Returns the visible total so the
+ * "Voir tous les témoignages" side-panel trigger only shows when there are more.
+ */
+export async function getHomeTestimonials() {
+  return safe(
+    async () => {
+      const all = await prisma.testimonial.findMany({
+        where: { visible: true },
+        include: { photo: true },
+        orderBy: { order: 'asc' },
+      });
+      const featured = all.filter((t) => t.featured);
+      let items: typeof all;
+      if (featured.length > 0) {
+        items = featured.slice(0, TESTIMONIALS_HOME);
+      } else {
+        // Random 6 (Fisher–Yates on a shallow copy).
+        const shuffled = [...all];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+        }
+        items = shuffled.slice(0, TESTIMONIALS_HOME);
+      }
+      return { items, total: all.length };
+    },
+    { items: [], total: 0 },
+  );
+}
+
+/** All visible testimonials — backs the side-panel drawer. */
+export function getAllTestimonials() {
   return safe(
     () =>
       prisma.testimonial.findMany({

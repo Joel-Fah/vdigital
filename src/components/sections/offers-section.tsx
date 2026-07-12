@@ -64,7 +64,7 @@ export function OffersSection({ offers }: { offers: OfferWithImage[] }) {
               {items.length === 0 ? (
                 <EmptyState
                   icon={<Package className="h-8 w-8" strokeWidth={1.25} />}
-                  message="Packages are being put together — get in touch to discuss your needs directly."
+                  message="Les offres sont en cours de préparation — écrivez-moi pour en discuter directement."
                   action={
                     <a
                       href="#contact"

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { env } from '@/lib/env';
 import { randomPexels, pexelsUrl } from '@/lib/pexels-curated';
+import { adminPath } from '@/lib/admin';
 import { LoginForm } from './login-form';
 
 export const metadata = {
@@ -44,7 +45,7 @@ export default function LoginPage() {
           </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-surface-white/95 p-8 shadow-card backdrop-blur">
-          <LoginForm turnstileSiteKey={env.turnstile.siteKey} />
+          <LoginForm turnstileSiteKey={env.turnstile.siteKey} forgotHref={adminPath('forgot')} />
         </div>
       </div>
     </div>

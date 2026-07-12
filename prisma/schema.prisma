@@ -117,23 +117,26 @@ model Offer {
 }
 
 model Testimonial {
-  id      String      @id @default(cuid())
-  author  String
-  role    String?
-  company String?
-  quote   String
-  photoId String?
-  photo   MediaAsset? @relation("TestimonialPhoto", fields: [photoId], references: [id], onDelete: SetNull)
-  order   Int
-  visible Boolean     @default(true)
+  id       String      @id @default(cuid())
+  author   String
+  role     String?
+  company  String?
+  quote    String
+  photoId  String?
+  photo    MediaAsset? @relation("TestimonialPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  featured Boolean     @default(false) // shown on the homepage (max 6)
+  order    Int
+  visible  Boolean     @default(true)
 
   @@index([visible, order])
+  @@index([featured])
 }
 
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
   email     String
+  whatsapp  String? // optional WhatsApp number (quick-request flow)
   subject   String?
   message   String
   read      Boolean  @default(false)
@@ -183,6 +186,20 @@ model AdminUser {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+}
+
+/// Single-use, short-lived password-reset tokens (Section 8 — forgot password).
+/// Only the SHA-256 hash of the token is stored; the raw token lives only in the
+/// emailed link.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, createdAt])
 }
 
 /// Login audit + rate-limit source (Section 8.3).

@@ -121,6 +121,29 @@
     @apply my-3 border-l-2 border-teal pl-4 text-ink-mid;
   }
 
+  /* Scrollbar that appears while scrolling / on hover, and fades out (admin sidebar). */
+  .scroll-fade {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+  .scroll-fade:hover,
+  .scroll-fade.is-scrolling {
+    scrollbar-color: rgba(27, 122, 122, 0.35) transparent;
+  }
+  .scroll-fade::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-fade::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+  .scroll-fade:hover::-webkit-scrollbar-thumb,
+  .scroll-fade.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(27, 122, 122, 0.35);
+  }
+
   /* Skeleton shimmer for progressive-loading placeholders (Section 5.1). */
   .skeleton {
     @apply relative overflow-hidden bg-teal-ultra;

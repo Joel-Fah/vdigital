@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import type { MediaAsset, Testimonial } from '@prisma/client';
 import { Field, Input, Textarea } from '@/components/ui/field';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
+import { TESTIMONIAL_MAX } from '@/lib/validation/entities';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/testimonials/actions';
 
 export function TestimonialForm({
@@ -19,11 +20,25 @@ export function TestimonialForm({
   photoAsset?: MediaAsset | null;
 }) {
   const [state, formAction] = useActionState<FormResult, FormData>(action, {});
+  const [count, setCount] = useState(testimonial?.quote?.length ?? 0);
+
   return (
     <form action={formAction} className="max-w-2xl space-y-5">
       <FormError>{state.error}</FormError>
-      <Field label="Citation" htmlFor="quote" required>
-        <Textarea id="quote" name="quote" defaultValue={testimonial?.quote} required />
+      <Field
+        label="Citation"
+        htmlFor="quote"
+        required
+        hint={`${count} / ${TESTIMONIAL_MAX} caractères`}
+      >
+        <Textarea
+          id="quote"
+          name="quote"
+          defaultValue={testimonial?.quote}
+          maxLength={TESTIMONIAL_MAX}
+          onChange={(e) => setCount(e.target.value.length)}
+          required
+        />
       </Field>
       <Field label="Auteur" htmlFor="author" required>
         <Input id="author" name="author" defaultValue={testimonial?.author} required />
@@ -46,11 +61,19 @@ export function TestimonialForm({
           className="w-28"
         />
       </Field>
-      <CheckboxRow
-        name="visible"
-        label="Visible sur le site"
-        defaultChecked={testimonial?.visible ?? true}
-      />
+      <div className="space-y-2.5">
+        <CheckboxRow
+          name="featured"
+          label="Mis en avant sur la page d'accueil"
+          hint="Jusqu'à 6 témoignages mis en avant s'affichent sur l'accueil ; les autres sont dans le panneau « Voir tous les témoignages »."
+          defaultChecked={testimonial?.featured ?? false}
+        />
+        <CheckboxRow
+          name="visible"
+          label="Visible sur le site"
+          defaultChecked={testimonial?.visible ?? true}
+        />
+      </div>
       <FormActions cancelHref={cancelHref} />
     </form>
   );

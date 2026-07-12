@@ -1,11 +1,13 @@
 import Image from 'next/image';
 import type { ClientLogo, MediaAsset } from '@prisma/client';
+import { initials } from '@/lib/utils';
 
 type ClientWithLogo = ClientLogo & { logo: MediaAsset | null };
 
 /**
  * ClientCard — original `.cf-card` (featured) / `.cl-card` (compact). Two
- * densities, same visual language (Section 2.4).
+ * densities, same visual language. When no logo is set, falls back to a fixed
+ * initials avatar (never a bare dot).
  */
 export function ClientCard({
   client,
@@ -14,30 +16,34 @@ export function ClientCard({
   client: ClientWithLogo;
   variant?: 'featured' | 'compact';
 }) {
+  const size = variant === 'featured' ? 40 : 32;
   const inner = (
-    <>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          {client.logo ? (
-            <Image
-              src={client.logo.url}
-              alt={client.logo.altText ?? client.name}
-              width={variant === 'featured' ? 40 : 28}
-              height={variant === 'featured' ? 40 : 28}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <span className="inline-block h-2 w-2 rounded-full bg-teal-bright" aria-hidden />
-          )}
-          <div>
-            <p className="text-[0.95rem] font-medium text-ink">{client.name}</p>
-            {client.sector && (
-              <p className="mt-0.5 text-[0.7rem] text-ink-muted">{client.sector}</p>
-            )}
-          </div>
-        </div>
+    <div className="flex items-center gap-3">
+      {client.logo ? (
+        <Image
+          src={client.logo.url}
+          alt={client.logo.altText ?? client.name}
+          width={size}
+          height={size}
+          style={{ width: size, height: size }}
+          className="flex-shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <span
+          aria-hidden
+          style={{ width: size, height: size }}
+          className="flex flex-shrink-0 items-center justify-center rounded-full bg-teal-light font-display text-[0.75rem] font-bold text-teal"
+        >
+          {initials(client.name)}
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-[0.95rem] font-medium text-ink">{client.name}</p>
+        {client.sector && (
+          <p className="mt-0.5 truncate text-[0.7rem] text-ink-muted">{client.sector}</p>
+        )}
       </div>
-    </>
+    </div>
   );
 
   const className =

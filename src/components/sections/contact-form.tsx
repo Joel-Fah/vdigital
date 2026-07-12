@@ -4,19 +4,28 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2 } from 'lucide-react';
-import { contactSchema, type ContactInput } from '@/lib/validation/contact';
-import { Field, Input, Textarea } from '@/components/ui/field';
+import {
+  contactSchema,
+  type ContactInput,
+  CONTACT_SUBJECTS,
+  OTHER_SUBJECT,
+} from '@/lib/validation/contact';
+import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Turnstile } from '@/components/ui/turnstile';
 
 /**
- * ContactForm — React Hook Form + Zod (shared schema with the API route,
- * Section 8.4). Includes a honeypot field and Cloudflare Turnstile (Section 8.3).
+ * ContactForm — React Hook Form + Zod (shared schema with the API route).
+ * Subject is a predefined list; choosing "Autre" reveals a free-text field and
+ * focuses it. Includes an optional WhatsApp number, a honeypot, and Turnstile.
  */
 export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey?: string }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [serverError, setServerError] = useState<string | null>(null);
   const [token, setToken] = useState('');
+  const [subjectChoice, setSubjectChoice] = useState('');
+  const [customSubject, setCustomSubject] = useState('');
+  const isOther = subjectChoice === OTHER_SUBJECT;
 
   const {
     register,
@@ -26,13 +35,18 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey?: string })
   } = useForm<ContactInput>({ resolver: zodResolver(contactSchema) });
 
   async function onSubmit(data: ContactInput) {
+    const finalSubject = isOther ? customSubject.trim() : subjectChoice;
+    if (!finalSubject) {
+      setServerError('Merci de choisir un sujet.');
+      return;
+    }
     setStatus('sending');
     setServerError(null);
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, turnstileToken: token }),
+        body: JSON.stringify({ ...data, subject: finalSubject, turnstileToken: token }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -40,6 +54,8 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey?: string })
       }
       setStatus('sent');
       reset();
+      setSubjectChoice('');
+      setCustomSubject('');
     } catch (err) {
       setStatus('error');
       setServerError(err instanceof Error ? err.message : 'Une erreur est survenue.');
@@ -60,7 +76,7 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey?: string })
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-xl space-y-4 text-left">
-      {/* Honeypot — hidden from users, must stay empty (Section 8.4). */}
+      {/* Honeypot — hidden from users, must stay empty. */}
       <input
         type="text"
         tabIndex={-1}
@@ -79,9 +95,41 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey?: string })
         </Field>
       </div>
 
-      <Field label="Sujet" htmlFor="subject" error={errors.subject?.message}>
-        <Input id="subject" placeholder="Objet de votre message" {...register('subject')} />
+      <Field
+        label="WhatsApp"
+        htmlFor="whatsapp"
+        hint="Optionnel — pour un retour plus rapide."
+        error={errors.whatsapp?.message}
+      >
+        <Input id="whatsapp" placeholder="+237 6 00 00 00 00" {...register('whatsapp')} />
       </Field>
+
+      <Field label="Sujet" htmlFor="subject" required>
+        <Select
+          id="subject"
+          value={subjectChoice}
+          onChange={(e) => setSubjectChoice(e.target.value)}
+        >
+          <option value="">Choisir un sujet…</option>
+          {CONTACT_SUBJECTS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
+      {isOther && (
+        <Field label="Précisez le sujet" htmlFor="customSubject" required>
+          <Input
+            id="customSubject"
+            autoFocus
+            placeholder="Votre sujet"
+            value={customSubject}
+            onChange={(e) => setCustomSubject(e.target.value)}
+          />
+        </Field>
+      )}
 
       <Field label="Message" htmlFor="message" required error={errors.message?.message}>
         <Textarea id="message" placeholder="Parlez-moi de votre projet…" {...register('message')} />

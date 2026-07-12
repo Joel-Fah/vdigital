@@ -21,7 +21,7 @@ export function ExpertiseSection({ items }: { items: ExpertiseItem[] }) {
             <div>
               <div className="mb-[5px] flex justify-between">
                 <span className="text-[0.85rem] text-ink-muted">
-                  Expertise areas are being added.
+                  Les domaines d&apos;expertise sont en cours d&apos;ajout.
                 </span>
                 <span className="text-[0.72rem] text-ink-light">0%</span>
               </div>

@@ -15,6 +15,7 @@ function readForm(formData: FormData) {
     company: formData.get('company'),
     quote: formData.get('quote'),
     photoId: formData.get('photoId'),
+    featured: parseBool(formData.get('featured')),
     visible: parseBool(formData.get('visible')),
     order: formData.get('order') ?? 0,
   });
@@ -35,6 +36,7 @@ export async function createTestimonialAction(
       company: d.company ?? null,
       quote: d.quote,
       photoId: d.photoId || null,
+      featured: d.featured,
       visible: d.visible,
       order: d.order,
     },
@@ -59,6 +61,7 @@ export async function updateTestimonialAction(
       company: d.company ?? null,
       quote: d.quote,
       photoId: d.photoId || null,
+      featured: d.featured,
       visible: d.visible,
       order: d.order,
     },
