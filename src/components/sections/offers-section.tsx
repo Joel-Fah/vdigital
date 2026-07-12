@@ -8,6 +8,7 @@ import { Section, SectionHeader } from '@/components/ui/section';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { stripHtml } from '@/lib/utils';
+import { formatDuration, formatPrice } from '@/lib/offers';
 import {
   SECTION_COPY,
   OFFERS_TABS,
@@ -150,7 +151,6 @@ function DiagnosticCard({ offer, index }: { offer: OfferWithImage; index: number
       <div className="mb-[0.8rem] font-display text-[2.5rem] font-bold leading-none text-teal-light">
         {String(index + 1).padStart(2, '0')}
       </div>
-      {offer.icon && <div className="mb-[0.8rem] text-[1.4rem]">{offer.icon}</div>}
       <p className="mb-2 text-[1rem] font-medium text-ink">{offer.name}</p>
       <p className="mb-[1.2rem] text-[0.8rem] leading-[1.7] text-ink-muted">
         {stripHtml(offer.description)}
@@ -167,22 +167,13 @@ function DiagnosticCard({ offer, index }: { offer: OfferWithImage; index: number
         </div>
       )}
 
-      {offer.duration && (
-        <span className="inline-flex items-center gap-[5px] rounded-sm border border-line bg-teal-ultra px-2.5 py-1 text-[0.68rem] uppercase tracking-[1px] text-teal">
-          {offer.duration}
-        </span>
-      )}
+      <OfferMeta offer={offer} />
     </Link>
   );
 }
 
-/** `.form-card` — teal header block (icon, name, level) over a body with modules + meta tags. */
+/** `.form-card` — teal header block (name, level) over a body with modules + price/duration. */
 function FormationCard({ offer }: { offer: OfferWithImage }) {
-  const meta = (offer.duration ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-
   return (
     <Link
       href={`?offer=${offer.slug}`}
@@ -190,7 +181,6 @@ function FormationCard({ offer }: { offer: OfferWithImage }) {
       className="block overflow-hidden rounded-lg border border-line bg-surface-white transition-shadow duration-200 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal"
     >
       <div className="border-b border-line bg-teal-ultra px-[1.6rem] py-[1.4rem]">
-        {offer.icon && <div className="mb-[0.4rem] text-[1.3rem]">{offer.icon}</div>}
         <p className="text-[0.95rem] font-medium leading-[1.3] text-ink">{offer.name}</p>
         {offer.badge && (
           <p className="mt-1 text-[0.65rem] uppercase tracking-[1px] text-teal">{offer.badge}</p>
@@ -210,19 +200,25 @@ function FormationCard({ offer }: { offer: OfferWithImage }) {
             ))}
           </div>
         )}
-        {meta.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {meta.map((m) => (
-              <span
-                key={m}
-                className="rounded-sm border border-line px-2 py-[3px] text-[0.62rem] uppercase tracking-[0.8px] text-ink-muted"
-              >
-                {m}
-              </span>
-            ))}
-          </div>
-        )}
+        <OfferMeta offer={offer} />
       </div>
     </Link>
+  );
+}
+
+/** Duration pill + price, shared by both card shapes. Renders nothing when unset. */
+function OfferMeta({ offer }: { offer: OfferWithImage }) {
+  const duration = formatDuration(offer.durationValue, offer.durationUnit);
+  const price = formatPrice(offer.priceAmount, offer.priceCurrency);
+  if (!duration && !price) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {duration && (
+        <span className="inline-flex items-center rounded-sm border border-line bg-teal-ultra px-2.5 py-1 text-[0.68rem] uppercase tracking-[1px] text-teal">
+          {duration}
+        </span>
+      )}
+      {price && <span className="text-[0.85rem] font-medium text-teal">{price}</span>}
+    </div>
   );
 }

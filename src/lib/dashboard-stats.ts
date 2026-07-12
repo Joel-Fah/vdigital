@@ -1,6 +1,5 @@
 import 'server-only';
 import { prisma } from '@/lib/prisma';
-import { withRetry } from '@/lib/db-retry';
 
 export type DashboardStats = {
   totals: {
@@ -27,7 +26,7 @@ export type DashboardStats = {
 
 const DAYS = 30;
 
-/** All numbers for the dashboard overview, in one retry-wrapped round-trip. */
+/** All numbers for the dashboard overview in one round-trip (client retries cold-starts). */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000);
   since.setHours(0, 0, 0, 0);
@@ -45,29 +44,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pexelsMedia,
     recentMsgRows,
     windowMsgs,
-  ] = await withRetry(() =>
-    Promise.all([
-      prisma.project.count(),
-      prisma.service.count(),
-      prisma.clientLogo.count(),
-      prisma.expertiseItem.count(),
-      prisma.offer.count(),
-      prisma.testimonial.count(),
-      prisma.mediaAsset.count(),
-      prisma.contactMessage.count({ where: { read: false } }),
-      prisma.mediaAsset.count({ where: { source: 'upload' } }),
-      prisma.mediaAsset.count({ where: { source: 'pexels' } }),
-      prisma.contactMessage.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 6,
-        select: { id: true, name: true, subject: true, createdAt: true, read: true },
-      }),
-      prisma.contactMessage.findMany({
-        where: { createdAt: { gte: since } },
-        select: { createdAt: true },
-      }),
-    ]),
-  );
+  ] = await Promise.all([
+    prisma.project.count(),
+    prisma.service.count(),
+    prisma.clientLogo.count(),
+    prisma.expertiseItem.count(),
+    prisma.offer.count(),
+    prisma.testimonial.count(),
+    prisma.mediaAsset.count(),
+    prisma.contactMessage.count({ where: { read: false } }),
+    prisma.mediaAsset.count({ where: { source: 'upload' } }),
+    prisma.mediaAsset.count({ where: { source: 'pexels' } }),
+    prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+      select: { id: true, name: true, subject: true, createdAt: true, read: true },
+    }),
+    prisma.contactMessage.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+  ]);
 
   // Bucket messages into daily counts across the whole window (zero-filled).
   const buckets = new Map<string, number>();

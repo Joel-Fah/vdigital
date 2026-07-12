@@ -31,6 +31,15 @@ const optionalText = (max = 500) =>
     .optional()
     .or(z.literal('').transform(() => undefined));
 
+/** Coerces "" / null → undefined; otherwise a positive integer. Empty number inputs. */
+const optionalPositiveInt = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number().int().positive('Doit être un entier positif').optional(),
+);
+
+/** Empty-string escape hatch for optional `z.enum` selects (unselected → undefined). */
+const zEmptyToUndefined = z.literal('').transform(() => undefined);
+
 export const projectSchema = z.object({
   title: z.string().trim().min(2, 'Titre requis').max(160),
   client: optionalText(120),
@@ -90,11 +99,12 @@ export const offerSchema = z.object({
   deliverables: z.array(z.string().trim().min(1)).max(30).default([]),
   /** Diagnostics: corner badge. Formations: level. */
   badge: optionalText(80),
-  /** Diagnostics: duration pill. Formations: comma-separated meta tags. */
-  duration: optionalText(120),
-  /** Single emoji shown above the title. */
-  icon: optionalText(8),
-  priceNote: optionalText(160),
+  /** Duration: positive integer + unit. */
+  durationValue: optionalPositiveInt,
+  durationUnit: z.enum(['hour', 'day', 'week', 'month']).optional().or(zEmptyToUndefined),
+  /** Price: integer amount + currency. */
+  priceAmount: optionalPositiveInt,
+  priceCurrency: z.enum(['EUR', 'USD', 'FCFA']).optional().or(zEmptyToUndefined),
   imageId: optionalText(60),
   visible: z.boolean().default(true),
   order: z.coerce.number().int().default(0),
