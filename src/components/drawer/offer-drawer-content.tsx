@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import type { MediaAsset, Offer } from '@prisma/client';
-import { Button } from '@/components/ui/button';
 import { RichText } from '@/components/ui/rich-text';
+import { QuickRequest } from '@/components/drawer/quick-request';
 import { formatDuration, formatPrice } from '@/lib/offers';
 
 type OfferDetail = Offer & { image: MediaAsset | null };
@@ -68,9 +68,7 @@ export function OfferDrawerContent({ data }: { data: unknown }) {
         </div>
       )}
 
-      <Button href="/#contact" variant="primary" size="sm">
-        Demander cette offre
-      </Button>
+      <QuickRequest itemLabel={offer.name} kind="offre" label="Demander cette offre" />
     </div>
   );
 }

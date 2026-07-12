@@ -12,6 +12,9 @@ export type DashboardStats = {
     media: number;
     unread: number;
   };
+  featured: { projects: number; services: number; testimonials: number };
+  pexelsCount: number;
+  messages30d: number;
   contentBreakdown: { label: string; value: number }[];
   messagesByDay: { date: string; count: number }[];
   mediaBySource: { upload: number; pexels: number };
@@ -44,6 +47,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pexelsMedia,
     recentMsgRows,
     windowMsgs,
+    featProjects,
+    featServices,
+    featTestimonials,
   ] = await Promise.all([
     prisma.project.count(),
     prisma.service.count(),
@@ -64,6 +70,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       where: { createdAt: { gte: since } },
       select: { createdAt: true },
     }),
+    prisma.project.count({ where: { featured: true } }),
+    prisma.service.count({ where: { featured: true } }),
+    prisma.testimonial.count({ where: { featured: true } }),
   ]);
 
   // Bucket messages into daily counts across the whole window (zero-filled).
@@ -80,6 +89,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   return {
     totals: { projects, services, clients, expertise, offers, testimonials, media, unread },
+    featured: { projects: featProjects, services: featServices, testimonials: featTestimonials },
+    pexelsCount: pexelsMedia,
+    messages30d: windowMsgs.length,
     contentBreakdown: [
       { label: 'Projets', value: projects },
       { label: 'Services', value: services },

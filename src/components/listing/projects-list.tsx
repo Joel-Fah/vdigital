@@ -33,11 +33,11 @@ export function ProjectsList({
     return (
       <EmptyState
         icon={<FolderOpen className="h-8 w-8" strokeWidth={1.25} />}
-        message="No projects published yet."
+        message="Aucun projet publié pour le moment."
         action={
           adminAddHref ? (
             <a href={adminAddHref} className="text-[0.8rem] font-medium text-teal hover:underline">
-              Add your first project →
+              Ajouter votre premier projet →
             </a>
           ) : undefined
         }

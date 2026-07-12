@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import { adminPath } from '@/lib/admin';
 import { getDashboardStats } from '@/lib/dashboard-stats';
+import { buildInsights } from '@/lib/dashboard-insights';
 import { DashboardCharts } from '@/components/admin/dashboard-charts';
+import { DashboardInsights } from '@/components/admin/dashboard-insights';
 
 export const dynamic = 'force-dynamic';
 
-/** Admin overview — KPI tiles + charts bento (content mix + activity). */
+/** Admin overview — KPI tiles + activity insights + charts bento. */
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
+  const insights = buildInsights(stats);
   const t = stats.totals;
 
   const cards = [
@@ -45,6 +48,9 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Activity insights (prioritised) */}
+      <DashboardInsights insights={insights} />
 
       {/* Charts bento */}
       <DashboardCharts stats={stats} />

@@ -24,7 +24,7 @@ export function ProjectsTeaser({ projects }: { projects: ProjectWithCover[] }) {
       {projects.length === 0 ? (
         <EmptyState
           icon={<FolderOpen className="h-8 w-8" strokeWidth={1.25} />}
-          message="Case studies coming soon — recent work is being documented."
+          message="Études de cas bientôt disponibles — les projets récents sont en cours de documentation."
         />
       ) : (
         <>

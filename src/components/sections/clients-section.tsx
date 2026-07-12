@@ -26,7 +26,7 @@ export function ClientsSection({ clients }: { clients: ClientWithLogo[] }) {
       {clients.length === 0 ? (
         <EmptyState
           variant="chip"
-          message="Client stories will be featured here soon."
+          message="Les références clients seront présentées ici prochainement."
           className="mx-auto max-w-md"
         />
       ) : (
