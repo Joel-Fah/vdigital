@@ -1,0 +1,7 @@
+packages:
+  - '.'
+
+overrides:
+  nodemailer: '>=9.0.1'
+  sharp: '>=0.35.0'
+  'next@15.5.21>sharp': '0.35.3'

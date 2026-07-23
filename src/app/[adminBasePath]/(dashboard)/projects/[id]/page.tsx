@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [project, categories, clients] = await Promise.all([
-    prisma.project.findUnique({ where: { id }, include: { coverImage: true } }),
+    prisma.project.findUnique({ where: { id }, include: { coverImage: true, gallery: true } }),
     getProjectCategories(),
     getProjectClients(),
   ]);

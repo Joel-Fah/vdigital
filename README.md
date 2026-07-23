@@ -386,6 +386,9 @@ Nothing here requires a developer or a redeploy.
 
 ## 12. Deployment
 
+> **Current launch guidance:** use [`LAST_TASKS.md`](./LAST_TASKS.md). It reflects the
+> Node.js hosting requirement and supersedes the historical Cloudflare Workers notes below.
+
 **Primary target — Cloudflare Workers via OpenNext** (`@opennextjs/cloudflare`), matching
 the near-$0/month plan:
 
