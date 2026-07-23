@@ -7,6 +7,7 @@ import { ChipsInput } from '@/components/ui/chips-input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Combobox } from '@/components/ui/combobox';
 import { MediaPicker } from '@/components/admin/media-picker';
+import { MediaGalleryPicker } from '@/components/admin/media-gallery-picker';
 import { CheckboxRow, FormActions, FormError } from '@/components/admin/form-shell';
 import type { FormResult } from '@/app/[adminBasePath]/(dashboard)/projects/actions';
 
@@ -22,7 +23,7 @@ export function ProjectForm({
 }: {
   action: (state: FormResult, formData: FormData) => Promise<FormResult>;
   cancelHref: string;
-  project?: Project | null;
+  project?: (Project & { gallery?: MediaAsset[] }) | null;
   coverAsset?: MediaAsset | null;
   categories?: string[];
   clients?: string[];
@@ -106,6 +107,11 @@ export function ProjectForm({
       </Field>
 
       <MediaPicker name="coverImageId" label="Image de couverture" defaultAsset={coverAsset} />
+      <MediaGalleryPicker
+        name="galleryIds"
+        label="Galerie du projet"
+        defaultAssets={project?.gallery ?? []}
+      />
 
       <Field label="Ordre" htmlFor="order" hint="Plus petit = plus haut dans la liste.">
         <Input

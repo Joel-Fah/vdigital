@@ -47,6 +47,7 @@ export const projectSchema = z.object({
   summary: richText(10, 'Résumé trop court'),
   link: optionalUrl,
   coverImageId: optionalText(60),
+  galleryIds: z.array(z.string().trim().min(1).max(60)).max(12).default([]),
   tags: z.array(z.string().trim().min(1)).max(20).default([]),
   results: z
     .array(

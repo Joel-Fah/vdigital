@@ -28,12 +28,12 @@ const nextConfig = {
     const csp = [
       "default-src 'self'",
       // Next.js requires 'unsafe-inline' for its inline bootstrap; 'unsafe-eval' only in dev.
-      `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com`,
+      `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com https://plausible.io`,
       "style-src 'self' 'unsafe-inline'",
       `img-src 'self' data: blob: https://images.pexels.com ${r2Host ? `https://${r2Host}` : ''}`,
       "font-src 'self' data:",
       "frame-src https://challenges.cloudflare.com",
-      "connect-src 'self' https://challenges.cloudflare.com",
+      "connect-src 'self' https://challenges.cloudflare.com https://plausible.io",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

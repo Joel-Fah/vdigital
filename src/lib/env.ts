@@ -44,12 +44,6 @@ export const env = {
       );
     },
   },
-  pexels: {
-    apiKey: optional('PEXELS_API_KEY'),
-    get isConfigured() {
-      return Boolean(this.apiKey);
-    },
-  },
   turnstile: {
     siteKey: optional('NEXT_PUBLIC_TURNSTILE_SITE_KEY'),
     secretKey: optional('TURNSTILE_SECRET_KEY'),

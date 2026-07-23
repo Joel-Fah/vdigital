@@ -6,8 +6,8 @@ import { env } from '@/lib/env';
  * Plausible-style script keyed by a domain in NEXT_PUBLIC_ANALYTICS_ID. Renders
  * nothing when unset. Swap the src if the client chooses a different provider.
  *
- * TODO(decision): confirm the analytics provider with the client; the CSP in
- * next.config.mjs must be widened to the provider's script/connect host.
+ * Plausible is the supported provider; its script and connection origin are
+ * included in the site CSP when this optional integration is enabled.
  */
 export function Analytics() {
   if (!env.analyticsId) return null;
