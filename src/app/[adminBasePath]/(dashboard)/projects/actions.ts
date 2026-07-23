@@ -35,6 +35,9 @@ function readForm(formData: FormData) {
     summary: formData.get('summary'),
     link: formData.get('link'),
     coverImageId: formData.get('coverImageId'),
+    galleryIds: formData
+      .getAll('galleryIds')
+      .filter((value): value is string => typeof value === 'string'),
     tags: parseList(formData.get('tags'), 'comma'),
     results: parseResults(formData.get('results')),
     featured: parseBool(formData.get('featured')),
@@ -58,6 +61,7 @@ export async function createProjectAction(_p: FormResult, formData: FormData): P
       summary: sanitizeRichText(d.summary),
       link: d.link ?? null,
       coverImageId: d.coverImageId || null,
+      ...(d.galleryIds.length ? { gallery: { connect: d.galleryIds.map((id) => ({ id })) } } : {}),
       tags: d.tags,
       resultsJson: d.results,
       featured: d.featured,
@@ -88,6 +92,7 @@ export async function updateProjectAction(
       summary: sanitizeRichText(d.summary),
       link: d.link ?? null,
       coverImageId: d.coverImageId || null,
+      gallery: { set: d.galleryIds.map((id) => ({ id })) },
       tags: d.tags,
       resultsJson: d.results,
       featured: d.featured,

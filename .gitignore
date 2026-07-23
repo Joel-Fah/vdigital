@@ -34,8 +34,6 @@ pnpm-debug.log*
 /prisma/migrations/dev.db*
 
 # internal working docs — kept local, not published to the repo
-MEDIA_TODO.md
-DEPLOY.md
 
 # misc
 .DS_Store
