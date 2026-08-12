@@ -13,6 +13,7 @@
 
 export const LOGO_SRC = '/vdigital-logo.jpg';
 export const AWARD_MEDAL_SRC = '/award-medal.jpg';
+export const PROFILE_PIC = '/vitus-profile.webp';
 
 export const CONTACT_DIRECT = {
   email: 'vitusahanda@yahoo.fr',
